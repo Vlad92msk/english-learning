@@ -3,13 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
+    "@babel/preset-react": "^7.24.6",
+    "@emotion/babel-preset-css-prop": "^11.11.0",
+    "@emotion/css": "^11.11.2",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@types/node": "^20.13.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "firebase": "^10.12.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+    "typescript": "^5.4.5",
+    "web-vitals": "^2.1.4",
+    "xlsx": "^0.18.5"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -34,5 +42,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@emotion/babel-plugin": "^11.11.0"
   }
 }
