@@ -15,7 +15,11 @@ const appStyle = css(`
         "learning-list settings" auto
         "learning-list card" 1fr
         "learning-list navigation" 50px
-        /auto          1fr ;`)
+        /auto          1fr ;
+  column-gap: 30px;        
+`)
+
+
 function App() {
     return (
         <div css={appStyle}>

@@ -13,18 +13,36 @@ const settingsStyle = css(`
     font-size: 13px;
 `)
 
-
 const settingsRowStyle = css`
     display: flex;
     flex-direction: column;
     gap: 10px;
 `
+const settingsGroupButtonsStyle = css`
+    display: flex;
+    gap: 20px;
+    width: 70%;
+`
 
 const settingsBoxStyle = css`
     display: flex;
     gap: 5px;
-    align-items: center;
     justify-content: space-between;
+`
+
+const radioGroupStyle = css`
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+`
+
+const radioLabelStyle = css`
+    display: flex;
+    align-items: center;
+    gap: 5px;
+`
+const uploadBoxStyle = css`
+    margin-left: auto;
 `
 
 export const Settings = () => {
@@ -43,48 +61,95 @@ export const Settings = () => {
         }
     };
 
-    return <div css={settingsStyle}>
-        <div css={settingsRowStyle}>
-            <div css={settingsBoxStyle}>
-                <span>Показывать</span>
-                {/*@ts-ignore*/}
-                <select value={settings?.type} onChange={(e) => onUpdate('ukHLQmUsw1eAof3mlxsU', {type: e.target.value})}>
-                    <option value={'1_side'}>1 сторону</option>
-                    <option value={'2_side'}>2 стороны</option>
-                </select>
-            </div>
-            {
-                settings?.type === '2_side' && (
+    return (
+        <div css={settingsStyle}>
+            <div css={settingsGroupButtonsStyle}>
+                <div css={settingsRowStyle}>
                     <div css={settingsBoxStyle}>
-                        <span>Первая сторона</span>
-                        {/*@ts-ignore*/}
-                        <select value={settings?.firstSide} onChange={(e) => onUpdate('ukHLQmUsw1eAof3mlxsU', {firstSide: e.target.value})}>
-                            <option value={'ru'}>ru</option>
-                            <option value={'en'}>en</option>
-                        </select>
+                        <span>Показывать</span>
+                        <div css={radioGroupStyle}>
+                            <label css={radioLabelStyle}>
+                                <input
+                                    type="radio"
+                                    name="type"
+                                    value="1_side"
+                                    checked={settings?.type === '1_side'}
+                                    onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', {type: '1_side'})}
+                                />
+                                1 сторону
+                            </label>
+                            <label css={radioLabelStyle}>
+                                <input
+                                    type="radio"
+                                    name="type"
+                                    value="2_side"
+                                    checked={settings?.type === '2_side'}
+                                    onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', {type: '2_side'})}
+                                />
+                                2 стороны
+                            </label>
+                        </div>
                     </div>
-                )
-            }
-        </div>
-        <div css={settingsRowStyle}>
-            <div css={settingsBoxStyle}>
-                <span>Листать</span>
-                <select
-                    value={settings?.isRepeat ? 'true' : 'false'}
-                    onChange={(e) => onUpdate('ukHLQmUsw1eAof3mlxsU', { isRepeat: e.target.value === 'true' })}
-                >
-                    <option value={'true'}>Да</option>
-                    <option value={'false'}>Нет</option>
-                </select>
-            </div>
-            <div>
-                {
-                    settings?.isRepeat && (
-                        <>
+                    {settings?.type === '2_side' && (
+                        <div css={settingsBoxStyle}>
+                            <span>Первая сторона</span>
+                            <div css={radioGroupStyle}>
+                                <label css={radioLabelStyle}>
+                                    <input
+                                        type="radio"
+                                        name="firstSide"
+                                        value="ru"
+                                        checked={settings?.firstSide === 'ru'}
+                                        onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', {firstSide: 'ru'})}
+                                    />
+                                    ru
+                                </label>
+                                <label css={radioLabelStyle}>
+                                    <input
+                                        type="radio"
+                                        name="firstSide"
+                                        value="en"
+                                        checked={settings?.firstSide === 'en'}
+                                        onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', {firstSide: 'en'})}
+                                    />
+                                    en
+                                </label>
+                            </div>
+                        </div>
+                    )}
+                </div>
+                <div css={settingsRowStyle}>
+                    <div css={settingsBoxStyle}>
+                        <span>Листать</span>
+                        <div css={radioGroupStyle}>
+                            <label css={radioLabelStyle}>
+                                <input
+                                    type="radio"
+                                    name="isRepeat"
+                                    value="true"
+                                    checked={settings?.isRepeat === true}
+                                    onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', {isRepeat: true})}
+                                />
+                                Да
+                            </label>
+                            <label css={radioLabelStyle}>
+                                <input
+                                    type="radio"
+                                    name="isRepeat"
+                                    value="false"
+                                    checked={settings?.isRepeat === false}
+                                    onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', {isRepeat: false})}
+                                />
+                                Нет
+                            </label>
+                        </div>
+                    </div>
+                    {settings?.isRepeat && (
+                        <div css={settingsBoxStyle}>
                             <span>Каждые</span>
                             <select
                                 value={settings?.repeatTime}
-                                onChange={(e) => onUpdate('ukHLQmUsw1eAof3mlxsU', { repeatTime: Number(e.target.value) })}
+                                onChange={(e) => onUpdate('ukHLQmUsw1eAof3mlxsU', {repeatTime: Number(e.target.value)})}
                             >
                                 <option value={200}>10 мин</option>
                                 <option value={400}>20 мин</option>
@@ -92,20 +157,20 @@ export const Settings = () => {
                                 <option value={700}>40 мин</option>
                                 <option value={1000}>50 мин</option>
                             </select>
-                        </>
-                    )
-                }
+                        </div>
+                    )}
+                </div>
+            </div>
+            <div css={uploadBoxStyle}>
+                <input
+                    type="file"
+                    accept=".xlsx, .xls"
+                    onChange={handleFileUpload}
+                    ref={fileInputRef}
+                    style={{display: 'none'}}
+                />
+                <button onClick={handleButtonClick}>Загрузить файл</button>
             </div>
         </div>
-        <div css={settingsRowStyle}>
-            <input
-                type="file"
-                accept=".xlsx, .xls"
-                onChange={handleFileUpload}
-                ref={fileInputRef}
-                style={{display: 'none'}}
-            />
-            <button onClick={handleButtonClick}>Загрузить файл</button>
-        </div>
-    </div>
+    );
 }

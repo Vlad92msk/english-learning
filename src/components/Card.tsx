@@ -9,11 +9,10 @@ const cardContainerStyle = css`
   height: 100%;
   max-height: 90%;
   position: relative;
-  overflow: hidden;
 `;
 
 const cardStyle = (type: string) => css`
-  width: 99%;
+  width: 100%;
   height: calc(100% - 70px);
   position: absolute;
   transform-style: preserve-3d;
