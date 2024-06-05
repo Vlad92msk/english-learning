@@ -76,10 +76,10 @@ function App() {
     }), [settings]);
 
 
-    console.log('cardType', cardType)
-    console.log('sentencesData', sentencesData)
-    console.log('vocabularData', vocabularData)
-    console.log('currentData', currentData)
+    // console.log('cardType', cardType)
+    // console.log('sentencesData', sentencesData)
+    // console.log('vocabularData', vocabularData)
+    // console.log('currentData', currentData)
 
     return (
         <div css={appStyle}>
