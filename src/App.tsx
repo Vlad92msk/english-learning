@@ -23,7 +23,7 @@ const appStyle = css(`
   grid-template:
         "learning-list settings" auto
         "learning-list card" 1fr
-        "learning-list navigation" 50px
+        "learning-list navigation" 65px
         /auto          1fr ;
   column-gap: 30px;        
 `)
@@ -75,11 +75,11 @@ function App() {
         firstSide: settings.firstSide,
     }), [settings]);
 
-console.log('sentencesData', sentencesData)
-console.log('vocabularData', vocabularData)
-    // if (settingsLoading || studyingIsLoading || sentencesIsLoading || vocabularIsLoading) {
-    //     return <div>Loading</div>;
-    // }
+
+    console.log('cardType', cardType)
+    console.log('sentencesData', sentencesData)
+    console.log('vocabularData', vocabularData)
+    console.log('currentData', currentData)
 
     return (
         <div css={appStyle}>

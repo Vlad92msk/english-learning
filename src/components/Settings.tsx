@@ -10,28 +10,32 @@ const settingsStyle = css(`
     gap: 50px;
     justify-content: center;
     font-size: 13px;
+    flex-wrap: wrap;
 `)
 
 const settingsRowStyle = css`
     display: flex;
     gap: 10px;
+    text-wrap: nowrap;
 `
 const settingsGroupButtonsStyle = css`
     display: flex;
     gap: 50px;
-    width: 70%;
 `
 
 const settingsBoxStyle = css`
     display: flex;
     gap: 5px;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: center;
+    border-right: 1px solid #435367;
+    margin-right: 5px;
+    padding-right: 15px;
 `
 
 const radioGroupStyle = css`
     display: flex;
     gap: 10px;
-    flex-direction: column;
 `
 
 const radioLabelStyle = css`
@@ -160,7 +164,7 @@ export const Settings = React.memo((props: SettingsProps) => {
                                     checked={settings?.isLearning === false}
                                     onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', { isLearning: false  })}
                                 />
-                                Изученные
+                                Изучил
                             </label>
                             <label css={radioLabelStyle}>
                                 <input
@@ -168,11 +172,23 @@ export const Settings = React.memo((props: SettingsProps) => {
                                     checked={settings?.isLearning === true}
                                     onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', { isLearning: true })}
                                 />
-                                Изучаемые
+                                Учу
                             </label>
                         </div>
                     </div>
                 </div>
+            </div>
+            <div css={uploadBoxStyle}>
+                <button onClick={() => {
+                    onAdd({
+                        isLearning: true,
+                        enValue: '',
+                        ruValue: '',
+                        isIdiom: false,
+                        isPhrasalVerb: false,
+                        dateAdded: new Date(),
+                    } as Card)
+                }}>+</button>
             </div>
             <div css={uploadBoxStyle}>
                 <input

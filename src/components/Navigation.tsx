@@ -1,16 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 /** @jsxImportSource @emotion/react */
 import { css } from '@emotion/react';
 import { getDownloadURL, ref } from "firebase/storage";
 import { storage } from "../index";
-import { useGetData } from "../hooks/useGetData";
-import { Card as CardGET, Card, Collection, Settings as SettingsGET, Settings, Studying } from "../types";
-import { useWatch } from "../hooks/useWatch";
+import { Card as CardGET, Settings as SettingsGET, Studying } from "../types";
 
 const navigationStyleMain = css(`
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative;
     
     span {
         font-size: 10px;
@@ -23,10 +22,17 @@ const navigationStyle = css(`
     grid-area: navigation;
     display: flex;
     align-items: center;
-    gap: 50px;
-    justify-content: space-between;
+    justify-content: center;
     
-    button {
+    button:first-of-type {
+        position: absolute;
+        left: 0;
+        width: 30%;
+        height: 100%;
+    }
+    button:last-of-type {
+        position: absolute;
+        right: 0;
         width: 30%;
         height: 100%;
     }
@@ -70,16 +76,17 @@ export const Navigation = React.memo((props: NavigationProps) => {
         fetchAudioURL();
     }, []);
 
-    const handleNextCard = () => {
+    const handleNextCard = useCallback(() => {
         if (data.length > 0 && nextIndex && data[nextIndex].id) {
             onUpdate('latestStatus', {lastCardId: data[nextIndex].id})
         }
-    }
-    const handlePrevCard = () => {
-        if (data.length > 0 && prevIndex && data[prevIndex].id) {
+    }, [data, nextIndex, onUpdate])
+
+    const handlePrevCard = useCallback(() => {
+        if (data.length > 0 && prevIndex >= 0 && data[prevIndex].id) {
             onUpdate('latestStatus', {lastCardId: data[prevIndex].id})
         }
-    }
+    }, [data, onUpdate, prevIndex])
 
     useEffect(() => {
         if (!audioURL) return;

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 /** @jsxImportSource @emotion/react */
 import { css } from '@emotion/react';
 import { Card as CardGET, Settings as SettingsGET, SettingsfFrstSide, SettingsTypeEnum } from "../types";
@@ -15,12 +15,12 @@ const cardStyle = (type: string) => css`
   position: absolute;
   transform-style: preserve-3d;
   transition: transform 0.6s;
-  border: 1px solid #435367;
-  cursor: ${type === SettingsTypeEnum.SIDE_1 ? 'pointer': 'default'};
+  gap: 10px;
+  cursor: ${type === SettingsTypeEnum.SIDE_1 ? 'pointer' : 'default'};
 `;
 
 const cardFlippedStyle = css`
-  transform: rotateY(180deg);
+  transform: rotateY(180deg); 
 `;
 
 const cardItemStyle = css`
@@ -32,12 +32,10 @@ const cardItemStyle = css`
 
 const cardFrontStyle = css`
   ${cardItemStyle};
-  background-color: #0d2136;
 `;
 
 const cardBackStyle = css`
   ${cardItemStyle};
-  background-color: #0d2136;
   transform: rotateY(180deg);
 `;
 
@@ -54,14 +52,28 @@ const cardTagsStyle = css`
 const cardDataStyle = css`
   display: flex;
   height: 100%;
+  flex-direction: column;
+  border: 1px solid #435367;
+  background: #0d2136;
+  
+  button {
+  z-index: 1;
+    max-width: 50px;
+    place-self: flex-end;
+    border: 0!important;
+    font-weight: 100!important;
+    font-size: 10px!important;
+  }
 `;
 
 const cardDataFirstSideRuStyle = css`
   flex-direction: column;
+  gap: 5px;
 `;
 
 const cardDataFirstSideEnStyle = css`
   flex-direction: column-reverse;
+  gap: 5px;
 `;
 
 const cardData1SideStyle = css`
@@ -79,17 +91,19 @@ const cardData1SideStyle = css`
 `;
 
 const cardData2SideStyle = css`
+
   span {
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow-y: auto;
+    overflow-y: auto;    
   }
 `;
+
 const tagStyle = css`
   padding: 5px;
-  background: #0d2136;;
+  background: #0d2136;
   border: 1px solid #435367;
   border-radius: 3px;
   font-weight: bold;
@@ -101,8 +115,11 @@ const metaRowStyle = css`
     justify-content: space-between;
     align-items: center;
 `;
+
 const getCardDataStyle = (type: string, firstSide: string) => css`
-  ${cardDataStyle};
+  display: flex;
+  height: 100%;
+  flex-direction: column;
   ${type === SettingsTypeEnum.SIDE_1 && cardData1SideStyle};
   ${type === SettingsTypeEnum.SIDE_2 && cardData2SideStyle};
   ${firstSide === SettingsfFrstSide.NATIVE && cardDataFirstSideRuStyle};
@@ -113,35 +130,43 @@ interface CardProps {
     settings: SettingsGET
     lastCardId: string
     data: CardGET[]
-    onRemove:  (id: string) => Promise<void>
+    onRemove: (id: string) => Promise<void>
     onUpdate: (id: string, data: Partial<CardGET>) => Promise<void>
 }
 
 export const Card = React.memo((props: CardProps) => {
-    const { data, lastCardId, onUpdate, onRemove, settings: { isLearning, firstSide, type } } = props;
+    const { data, lastCardId, onUpdate, onRemove, settings: { firstSide, type } } = props;
     const [visible, setVisible] = useState(firstSide);
     const [isFlipped, setIsFlipped] = useState(false);
+    const [isChangeNative, setIsChangeNative] = useState(false);
+    const [isChangeLearning, setIsChangeLearning] = useState(false);
 
-    useEffect(() => {
-        if (firstSide.length) {
-            setVisible(firstSide);
-        }
-    }, [firstSide]);
-
-    const cards = useMemo(() => {
-        return data.filter(({ isLearning: learning }) => learning === isLearning);
-    }, [data, isLearning]);
 
     const currentCard = useMemo(() => {
-        if (cards.length === 0) {
+        if (data.length === 0) {
             return { isIdiom: false, enValue: '', ruValue: '', isPhrasalVerb: false, id: '' };
         }
 
-        const currentIndex = lastCardId ? cards.findIndex(card => card.id === lastCardId) : 0;
-        return cards[currentIndex >= 0 ? currentIndex : 0];
-    }, [cards, lastCardId]);
+        const currentIndex = lastCardId ? data.findIndex(card => card.id === lastCardId) : 0;
+        return data[currentIndex >= 0 ? currentIndex : 0];
+    }, [data, lastCardId]);
 
     const { isIdiom, enValue, ruValue, isPhrasalVerb, id } = currentCard;
+
+    const [nativeValue, setNativeValue] = useState(ruValue);
+    const [learningValue, setLearningValue] = useState(enValue);
+
+    useEffect(() => {
+        if (ruValue !== nativeValue) {
+            setNativeValue(ruValue)
+        }
+    }, [ruValue]);
+
+    useEffect(() => {
+        if (enValue !== learningValue) {
+            setLearningValue(enValue)
+        }
+    }, [enValue]);
 
     const handleUpdatePartialVerbs = useCallback(() => {
         onUpdate(id, { isPhrasalVerb: !isPhrasalVerb });
@@ -158,6 +183,62 @@ export const Card = React.memo((props: CardProps) => {
         }
     }, [isFlipped, type]);
 
+
+    const nativeValueComponent = useMemo(() => {
+        if (isChangeNative) {
+            return (
+                <div css={cardDataStyle}>
+                    <input
+                        onClick={event => event.stopPropagation()}
+                        value={nativeValue}
+                        onChange={event => setNativeValue(event.target.value)}
+                    />
+                    <button onClick={(event) => {
+                        event.stopPropagation();
+                        onUpdate(id, { ruValue: nativeValue });
+                        setIsChangeNative(false);
+                    }}>ok</button>
+                </div>
+            );
+        }
+
+        return (
+            <div css={cardDataStyle}>
+                <button onClick={(event) => { event.stopPropagation(); setIsChangeNative(true) }}>set</button>
+                <span>{nativeValue}</span>
+            </div>
+        );
+    }, [id, isChangeNative, nativeValue, onUpdate]);
+
+    const learningValueComponent = useMemo(() => {
+        if (isChangeLearning) {
+            return (
+                <div css={cardDataStyle}>
+                    <input
+                        onClick={event => event.stopPropagation()}
+                        value={learningValue}
+                        onChange={event => setLearningValue(event.target.value)}
+                    />
+                    <button onClick={(event) => {
+                        event.stopPropagation();
+                        onUpdate(id, { enValue: learningValue });
+                        setIsChangeLearning(false);
+                    }}
+                    >
+                        ok
+                    </button>
+                </div>
+            );
+        }
+
+        return (
+            <div css={cardDataStyle}>
+                <button onClick={(event) => { event.stopPropagation(); setIsChangeLearning(true) }}>set</button>
+                <span>{learningValue}</span>
+            </div>
+        );
+    }, [id, isChangeLearning, learningValue, onUpdate]);
+
     return (
         <div css={cardContainerStyle}>
             <div css={metaRowStyle}>
@@ -167,7 +248,7 @@ export const Card = React.memo((props: CardProps) => {
                 </div>
                 <div css={cardTagsStyle}>
                     <button onClick={handleUpdatePartialVerbs}>
-                        {isPhrasalVerb ? 'no partial verb' : 'partial verb'}
+                        {isPhrasalVerb ? 'no phrasal verb' : 'phrasal verb'}
                     </button>
                     <button onClick={handleUpdateIdiom}>
                         {isIdiom ? 'no idiom' : 'idiom'}
@@ -180,13 +261,13 @@ export const Card = React.memo((props: CardProps) => {
                     <div css={getCardDataStyle(type, firstSide)}>
                         {type === SettingsTypeEnum.SIDE_2 ? (
                             <>
-                                <span>{ruValue}</span>
-                                <span>{enValue}</span>
+                                {nativeValueComponent}
+                                {learningValueComponent}
                             </>
                         ) : (
                             <>
-                                {visible === SettingsfFrstSide.NATIVE && <span>{ruValue}</span>}
-                                {visible === SettingsfFrstSide.LEARNING && <span>{enValue}</span>}
+                                {visible === SettingsfFrstSide.NATIVE && nativeValueComponent}
+                                {visible === SettingsfFrstSide.LEARNING && learningValueComponent}
                             </>
                         )}
                     </div>
@@ -195,13 +276,13 @@ export const Card = React.memo((props: CardProps) => {
                     <div css={getCardDataStyle(type, firstSide)}>
                         {type === SettingsTypeEnum.SIDE_2 ? (
                             <>
-                                <span>{enValue}</span>
-                                <span>{ruValue}</span>
+                                {learningValueComponent}
+                                {nativeValueComponent}
                             </>
                         ) : (
                             <>
-                                {visible === SettingsfFrstSide.NATIVE && <span>{ruValue}</span>}
-                                {visible === SettingsfFrstSide.LEARNING && <span>{enValue}</span>}
+                                {visible === SettingsfFrstSide.NATIVE && nativeValueComponent}
+                                {visible === SettingsfFrstSide.LEARNING && learningValueComponent}
                             </>
                         )}
                     </div>
@@ -209,4 +290,4 @@ export const Card = React.memo((props: CardProps) => {
             </div>
         </div>
     );
-})
+});
