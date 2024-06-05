@@ -55,6 +55,7 @@ const myStyle = css`
     -webkit-appearance: none;
     color: #d3e1fe;
     font-size: 13px;
+    cursor: pointer;
   }
 `
 

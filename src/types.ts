@@ -6,7 +6,8 @@ export interface SortOptions<T> {
 export const enum Collection {
     STUDYING = 'studying',
     SETTINGS = 'settings',
-    VOCABULAR = 'vocabular'
+    VOCABULAR = 'vocabular',
+    SENTENCES = 'sentences'
 }
 
 export interface Studying {
@@ -18,6 +19,7 @@ export interface Settings {
     isRepeat: boolean
     repeatTime: number
     firstSide: 'ru' | 'en'
+    isLearning: boolean
 }
 
 export interface Card {

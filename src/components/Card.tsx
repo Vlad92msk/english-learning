@@ -3,11 +3,11 @@ import React, { useEffect, useState } from "react";
 import { css } from '@emotion/react';
 import { useWatch } from "../hooks/useWatch";
 import { Collection, Settings, Studying, Card as CardGET } from "../types";
+import { useGetData } from "../hooks/useGetData";
 
 const cardContainerStyle = css`
   perspective: 10000px;
   height: 100%;
-  max-height: 90%;
   position: relative;
 `;
 
@@ -18,7 +18,7 @@ const cardStyle = (type: string) => css`
   transform-style: preserve-3d;
   transition: transform 0.6s;
   border: 1px solid #435367;
-  cursor: ${type === '1_side' ? 'ew-resize': 'default'};
+  cursor: ${type === '1_side' ? 'pointer': 'default'};
 `;
 
 const cardFlippedStyle = css`
@@ -46,7 +46,11 @@ const cardBackStyle = css`
 const cardTagsStyle = css`
   display: flex;
   gap: 10px;
-  padding: 20px 0;
+  padding: 20px 0 5px 0;
+  
+  button {
+    font-size: 10px!important;
+  }
 `;
 
 const cardDataStyle = css`
@@ -72,6 +76,7 @@ const cardData1SideStyle = css`
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow-y: auto;
   }
 `;
 
@@ -81,6 +86,7 @@ const cardData2SideStyle = css`
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow-y: auto;
   }
 `;
 const tagStyle = css`
@@ -91,6 +97,12 @@ const tagStyle = css`
   font-weight: bold;
   font-size: 12px;
 `;
+
+const metaRowStyle = css`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+`;
 const getCardDataStyle = (type: string, firstSide: string) => css`
   ${cardDataStyle};
   ${type === '1_side' && cardData1SideStyle};
@@ -99,9 +111,13 @@ const getCardDataStyle = (type: string, firstSide: string) => css`
   ${firstSide === 'en' && cardDataFirstSideEnStyle};
 `;
 
+interface CardProps {
+    cardType: Collection
+}
 
-export const Card = () => {
-    const [{ type, firstSide } = { type: '', firstSide: '' }] = useWatch<Settings>(Collection.SETTINGS);
+export const Card = (props: CardProps) => {
+    const { cardType } = props;
+    const [{ type, firstSide, isLearning } = { type: '', firstSide: '', isLearning: true }] = useWatch<Settings>(Collection.SETTINGS);
     const [{ lastCardId } = { lastCardId: 'rIH3KYFr8Jfc4oUbBTZE' }] = useWatch<Studying>(Collection.STUDYING);
     const [visible, setVisible] = useState(firstSide);
     const [isFlipped, setIsFlipped] = useState(false);
@@ -112,12 +128,14 @@ export const Card = () => {
         }
     }, [firstSide]);
 
-    const cards = useWatch<CardGET>(Collection.VOCABULAR, undefined, { field: 'dateAdded', direction: 'desc' });
+    const cards = useWatch<CardGET>(cardType, { isLearning });
+    const {onRemove, onUpdate} = useGetData<CardGET>(cardType);
 
     if (!cards?.length) return null
 
     const currentIndex = lastCardId ? cards.findIndex(card => card.id === lastCardId) : 0;
-    const { isIdiom, enValue, ruValue, isPhrasalVerb } = cards[currentIndex];
+
+    const { isIdiom, enValue, ruValue, isPhrasalVerb, id } = cards[currentIndex > 0 ? currentIndex : 0];
     const handleCardClick = () => {
         if (type === '1_side') {
             setVisible(prev => (prev === 'ru' ? 'en' : 'ru'));
@@ -127,9 +145,28 @@ export const Card = () => {
 
     return (
         <div css={cardContainerStyle}>
-            <div css={cardTagsStyle}>
-                {isPhrasalVerb && <span css={tagStyle}>#phrasal verb</span>}
-                {isIdiom && <span css={tagStyle}>#idiom</span>}
+            <div css={metaRowStyle}>
+                <div css={cardTagsStyle}>
+                    {isPhrasalVerb && <span css={tagStyle}>#phrasal verb</span>}
+                    {isIdiom && <span css={tagStyle}>#idiom</span>}
+                </div>
+                <div css={cardTagsStyle}>
+                    <button onClick={() => { onUpdate(id, {isPhrasalVerb: !isPhrasalVerb}) }}>
+                        {isPhrasalVerb ? 'no partial verb' : 'partial verb'}
+                    </button>
+                    <button onClick={() => { onUpdate(id, {isIdiom: !isIdiom}) }}>
+                        {isIdiom ? 'no idiom' : 'idiom'}
+                    </button>
+                    <button onClick={() => onRemove(id)}>x</button>
+                </div>
+                {/*<div css={{ display: 'flex', gap: '5px', alignItems: 'center' }}>*/}
+                {/*    <span css={{ fontSize: '10px' }}>Синонимы</span>*/}
+                {/*    <select>*/}
+                {/*        <option>word1</option>*/}
+                {/*        <option>word2</option>*/}
+                {/*        <option>word3</option>*/}
+                {/*    </select>*/}
+                {/*</div>*/}
             </div>
             <div css={[cardStyle(type), isFlipped && cardFlippedStyle]} onClick={handleCardClick}>
                 <div css={cardFrontStyle}>

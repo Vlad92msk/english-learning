@@ -15,12 +15,11 @@ const settingsStyle = css(`
 
 const settingsRowStyle = css`
     display: flex;
-    flex-direction: column;
     gap: 10px;
 `
 const settingsGroupButtonsStyle = css`
     display: flex;
-    gap: 20px;
+    gap: 50px;
     width: 70%;
 `
 
@@ -40,14 +39,19 @@ const radioLabelStyle = css`
     display: flex;
     align-items: center;
     gap: 5px;
+    cursor: pointer;
 `
 const uploadBoxStyle = css`
     margin-left: auto;
 `
 
-export const Settings = () => {
+interface SettingsProps {
+    cardType: Collection
+}
+export const Settings = (props: SettingsProps) => {
+    const { cardType } = props;
     const { data: [settings], onUpdate } = useGetData<SettingsGET>(Collection.SETTINGS);
-    const { onAdd } = useGetData<Card>(Collection.VOCABULAR);
+    const { onAdd } = useGetData<Card>(cardType);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const handleButtonClick = () => {
@@ -159,6 +163,32 @@ export const Settings = () => {
                             </select>
                         </div>
                     )}
+                </div>
+                <div css={settingsRowStyle}>
+                    <div css={settingsBoxStyle}>
+                        <div css={radioGroupStyle}>
+                            <label css={radioLabelStyle}>
+                                <input
+                                    type="radio"
+                                    name="type"
+                                    value="1_side"
+                                    checked={settings?.isLearning === false}
+                                    onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', { isLearning: false  })}
+                                />
+                                Изученные
+                            </label>
+                            <label css={radioLabelStyle}>
+                                <input
+                                    type="radio"
+                                    name="type"
+                                    value="2_side"
+                                    checked={settings?.isLearning === true}
+                                    onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', { isLearning: true })}
+                                />
+                                Изучаемые
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div css={uploadBoxStyle}>
