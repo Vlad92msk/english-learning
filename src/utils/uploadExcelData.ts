@@ -4,7 +4,11 @@ export const uploadExcelData = async <T, >(file: File, onAdd: (data: T) => Promi
     try {
         const cards = await readExcel<T>(file);
         for (const card of cards) {
-            await onAdd(card);
+            const newCard = {
+                ...card,
+                dateAdded: new Date(),
+            }
+            await onAdd(newCard);
         }
         // alert('Data successfully uploaded.');
     } catch (error: any) {

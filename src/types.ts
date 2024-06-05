@@ -14,11 +14,19 @@ export interface Studying {
     lastCardId: string
 }
 
+export const enum SettingsTypeEnum {
+    SIDE_1 = '1_side',
+    SIDE_2 = '2_side'
+}
+export const enum SettingsfFrstSide {
+    NATIVE = 'native',
+    LEARNING = 'learning',
+}
 export interface Settings {
-    type: '1_side' | '2_side'
+    type: SettingsTypeEnum
     isRepeat: boolean
     repeatTime: number
-    firstSide: 'ru' | 'en'
+    firstSide: SettingsfFrstSide
     isLearning: boolean
 }
 

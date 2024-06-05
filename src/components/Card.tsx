@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 /** @jsxImportSource @emotion/react */
 import { css } from '@emotion/react';
-import { useWatch } from "../hooks/useWatch";
-import { Collection, Settings, Studying, Card as CardGET } from "../types";
-import { useGetData } from "../hooks/useGetData";
+import { Card as CardGET, Settings as SettingsGET, SettingsfFrstSide, SettingsTypeEnum } from "../types";
 
 const cardContainerStyle = css`
   perspective: 10000px;
@@ -18,7 +16,7 @@ const cardStyle = (type: string) => css`
   transform-style: preserve-3d;
   transition: transform 0.6s;
   border: 1px solid #435367;
-  cursor: ${type === '1_side' ? 'pointer': 'default'};
+  cursor: ${type === SettingsTypeEnum.SIDE_1 ? 'pointer': 'default'};
 `;
 
 const cardFlippedStyle = css`
@@ -105,20 +103,22 @@ const metaRowStyle = css`
 `;
 const getCardDataStyle = (type: string, firstSide: string) => css`
   ${cardDataStyle};
-  ${type === '1_side' && cardData1SideStyle};
-  ${type === '2_side' && cardData2SideStyle};
-  ${firstSide === 'ru' && cardDataFirstSideRuStyle};
-  ${firstSide === 'en' && cardDataFirstSideEnStyle};
+  ${type === SettingsTypeEnum.SIDE_1 && cardData1SideStyle};
+  ${type === SettingsTypeEnum.SIDE_2 && cardData2SideStyle};
+  ${firstSide === SettingsfFrstSide.NATIVE && cardDataFirstSideRuStyle};
+  ${firstSide === SettingsfFrstSide.LEARNING && cardDataFirstSideEnStyle};
 `;
 
 interface CardProps {
-    cardType: Collection
+    settings: SettingsGET
+    lastCardId: string
+    data: CardGET[]
+    onRemove:  (id: string) => Promise<void>
+    onUpdate: (id: string, data: Partial<CardGET>) => Promise<void>
 }
 
-export const Card = (props: CardProps) => {
-    const { cardType } = props;
-    const [{ type, firstSide, isLearning } = { type: '', firstSide: '', isLearning: true }] = useWatch<Settings>(Collection.SETTINGS);
-    const [{ lastCardId } = { lastCardId: 'rIH3KYFr8Jfc4oUbBTZE' }] = useWatch<Studying>(Collection.STUDYING);
+export const Card = React.memo((props: CardProps) => {
+    const { data, lastCardId, onUpdate, onRemove, settings: { isLearning, firstSide, type } } = props;
     const [visible, setVisible] = useState(firstSide);
     const [isFlipped, setIsFlipped] = useState(false);
 
@@ -128,20 +128,35 @@ export const Card = (props: CardProps) => {
         }
     }, [firstSide]);
 
-    const cards = useWatch<CardGET>(cardType, { isLearning });
-    const {onRemove, onUpdate} = useGetData<CardGET>(cardType);
+    const cards = useMemo(() => {
+        return data.filter(({ isLearning: learning }) => learning === isLearning);
+    }, [data, isLearning]);
 
-    if (!cards?.length) return null
+    const currentCard = useMemo(() => {
+        if (cards.length === 0) {
+            return { isIdiom: false, enValue: '', ruValue: '', isPhrasalVerb: false, id: '' };
+        }
 
-    const currentIndex = lastCardId ? cards.findIndex(card => card.id === lastCardId) : 0;
+        const currentIndex = lastCardId ? cards.findIndex(card => card.id === lastCardId) : 0;
+        return cards[currentIndex >= 0 ? currentIndex : 0];
+    }, [cards, lastCardId]);
 
-    const { isIdiom, enValue, ruValue, isPhrasalVerb, id } = cards[currentIndex > 0 ? currentIndex : 0];
-    const handleCardClick = () => {
-        if (type === '1_side') {
-            setVisible(prev => (prev === 'ru' ? 'en' : 'ru'));
+    const { isIdiom, enValue, ruValue, isPhrasalVerb, id } = currentCard;
+
+    const handleUpdatePartialVerbs = useCallback(() => {
+        onUpdate(id, { isPhrasalVerb: !isPhrasalVerb });
+    }, [id, isPhrasalVerb, onUpdate]);
+
+    const handleUpdateIdiom = useCallback(() => {
+        onUpdate(id, { isIdiom: !isIdiom });
+    }, [id, isIdiom, onUpdate]);
+
+    const handleCardClick = useCallback(() => {
+        if (type === SettingsTypeEnum.SIDE_1) {
+            setVisible(prev => (prev === SettingsfFrstSide.NATIVE ? SettingsfFrstSide.LEARNING : SettingsfFrstSide.NATIVE));
             setIsFlipped(!isFlipped);
         }
-    };
+    }, [isFlipped, type]);
 
     return (
         <div css={cardContainerStyle}>
@@ -151,50 +166,42 @@ export const Card = (props: CardProps) => {
                     {isIdiom && <span css={tagStyle}>#idiom</span>}
                 </div>
                 <div css={cardTagsStyle}>
-                    <button onClick={() => { onUpdate(id, {isPhrasalVerb: !isPhrasalVerb}) }}>
+                    <button onClick={handleUpdatePartialVerbs}>
                         {isPhrasalVerb ? 'no partial verb' : 'partial verb'}
                     </button>
-                    <button onClick={() => { onUpdate(id, {isIdiom: !isIdiom}) }}>
+                    <button onClick={handleUpdateIdiom}>
                         {isIdiom ? 'no idiom' : 'idiom'}
                     </button>
                     <button onClick={() => onRemove(id)}>x</button>
                 </div>
-                {/*<div css={{ display: 'flex', gap: '5px', alignItems: 'center' }}>*/}
-                {/*    <span css={{ fontSize: '10px' }}>Синонимы</span>*/}
-                {/*    <select>*/}
-                {/*        <option>word1</option>*/}
-                {/*        <option>word2</option>*/}
-                {/*        <option>word3</option>*/}
-                {/*    </select>*/}
-                {/*</div>*/}
             </div>
             <div css={[cardStyle(type), isFlipped && cardFlippedStyle]} onClick={handleCardClick}>
                 <div css={cardFrontStyle}>
                     <div css={getCardDataStyle(type, firstSide)}>
-                        {type === '2_side' ? (
+                        {type === SettingsTypeEnum.SIDE_2 ? (
                             <>
                                 <span>{ruValue}</span>
                                 <span>{enValue}</span>
                             </>
                         ) : (
                             <>
-                                {visible === 'ru' && <span>{ruValue}</span>}
-                                {visible === 'en' && <span>{enValue}</span>}
+                                {visible === SettingsfFrstSide.NATIVE && <span>{ruValue}</span>}
+                                {visible === SettingsfFrstSide.LEARNING && <span>{enValue}</span>}
                             </>
                         )}
                     </div>
                 </div>
                 <div css={cardBackStyle}>
                     <div css={getCardDataStyle(type, firstSide)}>
-                        {type === '2_side' ? (
+                        {type === SettingsTypeEnum.SIDE_2 ? (
                             <>
                                 <span>{enValue}</span>
                                 <span>{ruValue}</span>
                             </>
                         ) : (
                             <>
-                                {visible === 'ru' && <span>{ruValue}</span>}
-                                {visible === 'en' && <span>{enValue}</span>}
+                                {visible === SettingsfFrstSide.NATIVE && <span>{ruValue}</span>}
+                                {visible === SettingsfFrstSide.LEARNING && <span>{enValue}</span>}
                             </>
                         )}
                     </div>
@@ -202,4 +209,4 @@ export const Card = (props: CardProps) => {
             </div>
         </div>
     );
-};
+})

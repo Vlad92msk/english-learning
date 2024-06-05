@@ -1,8 +1,7 @@
 import React from "react";
 /** @jsxImportSource @emotion/react */
 import { css } from '@emotion/react';
-import { useGetData } from "../hooks/useGetData";
-import { Collection, Settings as SettingsGET, Card } from "../types";
+import { Card, Settings as SettingsGET, SettingsfFrstSide, SettingsTypeEnum } from "../types";
 import { uploadExcelData } from "../utils/uploadExcelData";
 
 const settingsStyle = css(`
@@ -46,12 +45,12 @@ const uploadBoxStyle = css`
 `
 
 interface SettingsProps {
-    cardType: Collection
+    settings: SettingsGET
+    onAdd:  (data: Card) => Promise<void>
+    onUpdate: (id: string, data: Partial<SettingsGET>) => Promise<void>
 }
-export const Settings = (props: SettingsProps) => {
-    const { cardType } = props;
-    const { data: [settings], onUpdate } = useGetData<SettingsGET>(Collection.SETTINGS);
-    const { onAdd } = useGetData<Card>(cardType);
+export const Settings = React.memo((props: SettingsProps) => {
+    const { settings, onAdd, onUpdate } = props;
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const handleButtonClick = () => {
@@ -75,46 +74,38 @@ export const Settings = (props: SettingsProps) => {
                             <label css={radioLabelStyle}>
                                 <input
                                     type="radio"
-                                    name="type"
-                                    value="1_side"
-                                    checked={settings?.type === '1_side'}
-                                    onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', {type: '1_side'})}
+                                    checked={settings?.type === SettingsTypeEnum.SIDE_1}
+                                    onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', { type: SettingsTypeEnum.SIDE_1 })}
                                 />
                                 1 сторону
                             </label>
                             <label css={radioLabelStyle}>
                                 <input
                                     type="radio"
-                                    name="type"
-                                    value="2_side"
-                                    checked={settings?.type === '2_side'}
-                                    onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', {type: '2_side'})}
+                                    checked={settings?.type === SettingsTypeEnum.SIDE_2}
+                                    onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', { type: SettingsTypeEnum.SIDE_2 })}
                                 />
                                 2 стороны
                             </label>
                         </div>
                     </div>
-                    {settings?.type === '2_side' && (
+                    {settings?.type === SettingsTypeEnum.SIDE_2 && (
                         <div css={settingsBoxStyle}>
                             <span>Первая сторона</span>
                             <div css={radioGroupStyle}>
                                 <label css={radioLabelStyle}>
                                     <input
                                         type="radio"
-                                        name="firstSide"
-                                        value="ru"
-                                        checked={settings?.firstSide === 'ru'}
-                                        onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', {firstSide: 'ru'})}
+                                        checked={settings?.firstSide === SettingsfFrstSide.NATIVE }
+                                        onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', { firstSide: SettingsfFrstSide.NATIVE })}
                                     />
                                     ru
                                 </label>
                                 <label css={radioLabelStyle}>
                                     <input
                                         type="radio"
-                                        name="firstSide"
-                                        value="en"
-                                        checked={settings?.firstSide === 'en'}
-                                        onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', {firstSide: 'en'})}
+                                        checked={settings?.firstSide === SettingsfFrstSide.LEARNING}
+                                        onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', { firstSide: SettingsfFrstSide.LEARNING })}
                                     />
                                     en
                                 </label>
@@ -129,8 +120,6 @@ export const Settings = (props: SettingsProps) => {
                             <label css={radioLabelStyle}>
                                 <input
                                     type="radio"
-                                    name="isRepeat"
-                                    value="true"
                                     checked={settings?.isRepeat === true}
                                     onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', {isRepeat: true})}
                                 />
@@ -139,8 +128,6 @@ export const Settings = (props: SettingsProps) => {
                             <label css={radioLabelStyle}>
                                 <input
                                     type="radio"
-                                    name="isRepeat"
-                                    value="false"
                                     checked={settings?.isRepeat === false}
                                     onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', {isRepeat: false})}
                                 />
@@ -170,8 +157,6 @@ export const Settings = (props: SettingsProps) => {
                             <label css={radioLabelStyle}>
                                 <input
                                     type="radio"
-                                    name="type"
-                                    value="1_side"
                                     checked={settings?.isLearning === false}
                                     onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', { isLearning: false  })}
                                 />
@@ -180,8 +165,6 @@ export const Settings = (props: SettingsProps) => {
                             <label css={radioLabelStyle}>
                                 <input
                                     type="radio"
-                                    name="type"
-                                    value="2_side"
                                     checked={settings?.isLearning === true}
                                     onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', { isLearning: true })}
                                 />
@@ -203,4 +186,4 @@ export const Settings = (props: SettingsProps) => {
             </div>
         </div>
     );
-}
+})

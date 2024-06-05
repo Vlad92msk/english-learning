@@ -4,7 +4,7 @@ import { css } from '@emotion/react';
 import { getDownloadURL, ref } from "firebase/storage";
 import { storage } from "../index";
 import { useGetData } from "../hooks/useGetData";
-import { Card, Collection, Settings, Studying } from "../types";
+import { Card as CardGET, Card, Collection, Settings as SettingsGET, Settings, Studying } from "../types";
 import { useWatch } from "../hooks/useWatch";
 
 const navigationStyleMain = css(`
@@ -39,22 +39,21 @@ const boxStyle = css(`
 `)
 
 interface NavigationProps {
-    cardType: Collection
+    lastCardId: string
+    data: CardGET[]
+    settings: SettingsGET
+    cardUpdate: (id: string, data: Partial<CardGET>) => Promise<void>
+    onUpdate: (id: string, data: Partial<Studying>) => Promise<void>
 }
-export const Navigation = (props: NavigationProps) => {
-    const { cardType } = props;
-    const [{ isRepeat, repeatTime, isLearning } = { isRepeat: false, repeatTime: 0, isLearning: true } ] = useWatch<Settings>(Collection.SETTINGS)
-    const { onUpdate } = useGetData<Studying>(Collection.STUDYING);
-    const { onUpdate: vocabularUpdate } = useGetData<Card>(cardType, { isLearning });
-    const cards = useWatch<Card>(cardType, { isLearning })
-    const [{ lastCardId } = { lastCardId: 'rIH3KYFr8Jfc4oUbBTZE' }] = useWatch<Studying>(Collection.STUDYING)
-    const currentIndex1 = (!lastCardId?.length) ? 0 : cards?.findIndex(card => card.id === lastCardId) || 0
+export const Navigation = React.memo((props: NavigationProps) => {
+    const { cardUpdate, data, settings: { repeatTime, isRepeat }, lastCardId, onUpdate } = props;
+    const currentIndex1 = (!lastCardId?.length) ? 0 : data?.findIndex(card => card.id === lastCardId) || 0
     const currentIndex = currentIndex1 < 0 ? 0 : currentIndex1
 
-    const nextIndex = currentIndex === cards?.length - 1 ? 0 : currentIndex + 1
-    const prevIndex = currentIndex === 0 ? cards?.length - 1 : currentIndex - 1
+    const nextIndex = currentIndex === data?.length - 1 ? 0 : currentIndex + 1
+    const prevIndex = currentIndex === 0 ? data?.length - 1 : currentIndex - 1
 
-    const currentCard = cards[currentIndex]
+    const currentCard = data[currentIndex]
 
     const [audioURL, setAudioURL] = useState<string | null>(null);
 
@@ -72,10 +71,14 @@ export const Navigation = (props: NavigationProps) => {
     }, []);
 
     const handleNextCard = () => {
-        onUpdate('latestStatus', {lastCardId: cards[nextIndex].id})
+        if (data.length > 0 && nextIndex && data[nextIndex].id) {
+            onUpdate('latestStatus', {lastCardId: data[nextIndex].id})
+        }
     }
     const handlePrevCard = () => {
-        onUpdate('latestStatus', {lastCardId: cards[prevIndex].id})
+        if (data.length > 0 && prevIndex && data[prevIndex].id) {
+            onUpdate('latestStatus', {lastCardId: data[prevIndex].id})
+        }
     }
 
     useEffect(() => {
@@ -99,14 +102,14 @@ export const Navigation = (props: NavigationProps) => {
     }, [audioURL, handleNextCard, isRepeat, repeatTime]);
 
     return <div css={navigationStyleMain}>
-        <span>{currentIndex + 1}/{cards?.length}</span>
+        <span>{currentIndex + 1}/{data?.length}</span>
         <div css={navigationStyle}>
             <button onClick={handlePrevCard}>prev</button>
             <div css={boxStyle}>
                 <span>Продолжаем учить?</span>
                 <select
                     value={currentCard?.isLearning ? 'true' : 'false'}
-                    onChange={(e) => vocabularUpdate(currentCard.id, {isLearning: e.target.value === 'true'})}
+                    onChange={(e) => cardUpdate(currentCard.id, {isLearning: e.target.value === 'true'})}
                 >
                     <option value='true'>Да</option>
                     <option value='false'>Нет</option>
@@ -117,4 +120,4 @@ export const Navigation = (props: NavigationProps) => {
             </button>
         </div>
     </div>
-}
+})

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Collection, SortOptions } from "../types";
+import { useCallback, useEffect, useState } from "react";
+import { Collection } from "../types";
 import { getData } from "../utils/getData";
 import { addData } from "../utils/addData";
 import { updateData } from "../utils/updateData";
@@ -8,7 +8,6 @@ import { deleteData } from "../utils/deleteData";
 export const useGetData = <T, >(
     collectionName: Collection,
     queryParams?: Partial<T>,
-    sortOptions?: SortOptions<T>
 ) => {
     const [data, setData] = useState<T[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -19,7 +18,7 @@ export const useGetData = <T, >(
             setIsLoading(true);
             setError(null);
             try {
-                const result = await getData<T>(collectionName, queryParams, sortOptions);
+                const result = await getData<T>(collectionName, queryParams);
                 setData(result);
             } catch (err) {
                 setError(err as Error);
@@ -29,49 +28,49 @@ export const useGetData = <T, >(
         };
 
         fetchData();
-    }, [collectionName, queryParams, sortOptions]);
+    }, [collectionName, JSON.stringify(queryParams)]);
 
-    const onAdd = async (data: T) => {
+    const onAdd = useCallback(async (data: T) => {
         setIsLoading(true);
         setError(null);
         try {
             await addData(collectionName, data);
-            const result = await getData<T>(collectionName, queryParams, sortOptions);
+            const result = await getData<T>(collectionName, queryParams);
             setData(result);
         } catch (err) {
             setError(err as Error);
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [collectionName, JSON.stringify(queryParams)]);
 
-    const onUpdate = async (id: string, data: Partial<T>) => {
+    const onUpdate = useCallback(async (id: string, data: Partial<T>) => {
         setIsLoading(true);
         setError(null);
         try {
             await updateData(collectionName, id, data);
-            const result = await getData<T>(collectionName, queryParams, sortOptions);
+            const result = await getData<T>(collectionName, queryParams);
             setData(result);
         } catch (err) {
             setError(err as Error);
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [collectionName, JSON.stringify(queryParams)]);
 
-    const onRemove = async (id: string) => {
+    const onRemove = useCallback(async (id: string) => {
         setIsLoading(true);
         setError(null);
         try {
             await deleteData(collectionName, id);
-            const result = await getData<T>(collectionName, queryParams, sortOptions);
+            const result = await getData<T>(collectionName, queryParams);
             setData(result);
         } catch (err) {
             setError(err as Error);
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [collectionName, JSON.stringify(queryParams)]);
 
     return { data, isLoading, error, onAdd, onUpdate, onRemove };
 }
