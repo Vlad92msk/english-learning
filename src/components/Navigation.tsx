@@ -66,7 +66,7 @@ export const Navigation = React.memo((props: NavigationProps) => {
     useEffect(() => {
         const fetchAudioURL = async () => {
             try {
-                const url = await getDownloadURL(ref(storage, 'gs://english-learning-app-vlad.appspot.com/audio/electric_door_opening_2.mp3')); // Укажите путь к вашему звуковому файлу в Firebase Storage
+                const url = await getDownloadURL(ref(storage, 'gs://english-learning-app-vlad.appspot.com/audio/next.mp3')); // Укажите путь к вашему звуковому файлу в Firebase Storage
                 setAudioURL(url);
             } catch (error) {
                 console.error("Error fetching audio URL:", error);

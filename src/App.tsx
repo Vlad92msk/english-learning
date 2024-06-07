@@ -33,7 +33,7 @@ function App() {
     const [cardType, setCardType] = useState<Collection>(Collection.VOCABULAR);
 
     const {
-        data: [settings = { type: SettingsTypeEnum.SIDE_1, firstSide: SettingsfFrstSide.NATIVE, isLearning: true, isRepeat: false, repeatTime: 10000 }],
+        data: [settings = { type: SettingsTypeEnum.SIDE_1, firstSide: SettingsfFrstSide.NATIVE, isLearning: true, isRepeat: false, repeatTime: 300000 }],
         onUpdate: settingsUpdate,
         isLoading: settingsLoading,
     } = useGetData<SettingsType>(Collection.SETTINGS);
@@ -88,6 +88,8 @@ function App() {
                 vocabularCount={vocabularData.length || 0}
                 cardType={cardType}
                 setCardType={setCardType}
+                onUpdateSettings={settingsUpdate}
+                isLearning={settings.isLearning}
             />
             <Settings
                 settings={commonSettings}

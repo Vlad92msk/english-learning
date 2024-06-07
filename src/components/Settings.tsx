@@ -7,7 +7,7 @@ import { uploadExcelData } from "../utils/uploadExcelData";
 const settingsStyle = css(`
     grid-area: settings;
     display: flex;
-    gap: 50px;
+    gap: 10px;
     justify-content: center;
     font-size: 13px;
     flex-wrap: wrap;
@@ -20,7 +20,8 @@ const settingsRowStyle = css`
 `
 const settingsGroupButtonsStyle = css`
     display: flex;
-    gap: 50px;
+    gap: 10px;
+    flex-wrap: wrap;
 `
 
 const settingsBoxStyle = css`
@@ -31,11 +32,15 @@ const settingsBoxStyle = css`
     border-right: 1px solid #435367;
     margin-right: 5px;
     padding-right: 15px;
+    width: 150px;
+    height: 62px;
+    justify-content: center;
 `
 
 const radioGroupStyle = css`
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
 `
 
 const radioLabelStyle = css`
@@ -46,6 +51,8 @@ const radioLabelStyle = css`
 `
 const uploadBoxStyle = css`
     margin-left: auto;
+    gap: 10px;
+    display: flex;
 `
 
 interface SettingsProps {
@@ -146,11 +153,11 @@ export const Settings = React.memo((props: SettingsProps) => {
                                 value={settings?.repeatTime}
                                 onChange={(e) => onUpdate('ukHLQmUsw1eAof3mlxsU', {repeatTime: Number(e.target.value)})}
                             >
-                                <option value={200}>10 мин</option>
-                                <option value={400}>20 мин</option>
-                                <option value={600}>30 мин</option>
-                                <option value={700}>40 мин</option>
-                                <option value={1000}>50 мин</option>
+                                <option value={300000}>5 мин</option>
+                                <option value={600000}>10 мин</option>
+                                <option value={1200000}>20 мин</option>
+                                <option value={1800000}>30 мин</option>
+                                <option value={2400000}>40 мин</option>
                             </select>
                         </div>
                     )}
@@ -158,7 +165,7 @@ export const Settings = React.memo((props: SettingsProps) => {
                 <div css={settingsRowStyle}>
                     <div css={settingsBoxStyle}>
                         <div css={radioGroupStyle}>
-                            <label css={radioLabelStyle}>
+                        <label css={radioLabelStyle}>
                                 <input
                                     type="radio"
                                     checked={settings?.isLearning === false}
@@ -188,9 +195,8 @@ export const Settings = React.memo((props: SettingsProps) => {
                         isPhrasalVerb: false,
                         dateAdded: new Date(),
                     } as Card)
-                }}>+</button>
-            </div>
-            <div css={uploadBoxStyle}>
+                }}>+
+                </button>
                 <input
                     type="file"
                     accept=".xlsx, .xls"
