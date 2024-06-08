@@ -1,7 +1,7 @@
 import React from "react";
 /** @jsxImportSource @emotion/react */
 import { css } from '@emotion/react';
-import { Card, Settings as SettingsGET, SettingsfFrstSide, SettingsTypeEnum } from "../types";
+import { Card, Collection, Settings as SettingsGET, SettingsfFrstSide, SettingsTypeEnum } from "../types";
 import { uploadExcelData } from "../utils/uploadExcelData";
 
 const settingsStyle = css(`
@@ -56,12 +56,13 @@ const uploadBoxStyle = css`
 `
 
 interface SettingsProps {
+    cardType: Collection
     settings: SettingsGET
     onAdd:  (data: Card) => Promise<void>
     onUpdate: (id: string, data: Partial<SettingsGET>) => Promise<void>
 }
 export const Settings = React.memo((props: SettingsProps) => {
-    const { settings, onAdd, onUpdate } = props;
+    const { settings, onAdd, onUpdate, cardType } = props;
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const handleButtonClick = () => {
@@ -71,7 +72,7 @@ export const Settings = React.memo((props: SettingsProps) => {
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            await uploadExcelData<Card>(file, onAdd);
+            await uploadExcelData<Card>(file, cardType);
         }
     };
 
@@ -161,28 +162,6 @@ export const Settings = React.memo((props: SettingsProps) => {
                             </select>
                         </div>
                     )}
-                </div>
-                <div css={settingsRowStyle}>
-                    <div css={settingsBoxStyle}>
-                        <div css={radioGroupStyle}>
-                        <label css={radioLabelStyle}>
-                                <input
-                                    type="radio"
-                                    checked={settings?.isLearning === false}
-                                    onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', { isLearning: false  })}
-                                />
-                                Изучил
-                            </label>
-                            <label css={radioLabelStyle}>
-                                <input
-                                    type="radio"
-                                    checked={settings?.isLearning === true}
-                                    onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', { isLearning: true })}
-                                />
-                                Учу
-                            </label>
-                        </div>
-                    </div>
                 </div>
             </div>
             <div css={uploadBoxStyle}>

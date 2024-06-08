@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { css } from '@emotion/react';
 import { getDownloadURL, ref } from "firebase/storage";
 import { storage } from "../index";
-import { Card as CardGET, Settings as SettingsGET, Studying } from "../types";
+import { Card as CardGET, Collection, Settings as SettingsGET, Studying } from "../types";
 
 const navigationStyleMain = css(`
     display: flex;
@@ -46,13 +46,15 @@ const boxStyle = css(`
 
 interface NavigationProps {
     lastCardId: string
+    cardType: Collection
     data: CardGET[]
     settings: SettingsGET
     cardUpdate: (id: string, data: Partial<CardGET>) => Promise<void>
     onUpdate: (id: string, data: Partial<Studying>) => Promise<void>
 }
 export const Navigation = React.memo((props: NavigationProps) => {
-    const { cardUpdate, data, settings: { repeatTime, isRepeat }, lastCardId, onUpdate } = props;
+    const { cardUpdate, data, settings: { repeatTime, isRepeat }, lastCardId, onUpdate, cardType } = props;
+
     const currentIndex1 = (!lastCardId?.length) ? 0 : data?.findIndex(card => card.id === lastCardId) || 0
     const currentIndex = currentIndex1 < 0 ? 0 : currentIndex1
 
@@ -78,15 +80,15 @@ export const Navigation = React.memo((props: NavigationProps) => {
 
     const handleNextCard = useCallback(() => {
         if (data.length > 0 && nextIndex && data[nextIndex].id) {
-            onUpdate('latestStatus', {lastCardId: data[nextIndex].id})
+            onUpdate(cardType, {lastCardId: data[nextIndex].id})
         }
-    }, [data, nextIndex, onUpdate])
+    }, [cardType, data, nextIndex, onUpdate])
 
     const handlePrevCard = useCallback(() => {
         if (data.length > 0 && prevIndex >= 0 && data[prevIndex].id) {
-            onUpdate('latestStatus', {lastCardId: data[prevIndex].id})
+            onUpdate(cardType, {lastCardId: data[prevIndex].id})
         }
-    }, [data, onUpdate, prevIndex])
+    }, [cardType, data, onUpdate, prevIndex])
 
     useEffect(() => {
         if (!audioURL) return;

@@ -35,14 +35,13 @@ const buttonStyle = (color?: string) => css(`
 `)
 interface Props {
     cardType: Collection
-    setCardType:  React.Dispatch<React.SetStateAction<Collection>>
     onUpdateSettings: (id: string, data: Partial<SettingsGET>) => Promise<void>
     sentencesCount: number
     vocabularCount: number
     isLearning: boolean
 }
 export const LearningList = React.memo((props: Props) => {
-    const  { setCardType, cardType, vocabularCount, sentencesCount, onUpdateSettings, isLearning  } = props
+    const  { cardType, vocabularCount, sentencesCount, onUpdateSettings, isLearning  } = props
     return (
         <div css={learningList}>
             <div css={learningButtonsStyle}>
@@ -52,13 +51,13 @@ export const LearningList = React.memo((props: Props) => {
             <div css={boxStyle}>
                 <button
                     css={buttonStyle(cardType === Collection.SENTENCES ? '#1c3249' : 'transparent')}
-                    onClick={() => setCardType(Collection.SENTENCES)}
+                    onClick={() => onUpdateSettings('ukHLQmUsw1eAof3mlxsU', { lastView: Collection.SENTENCES })}
                 >
                     Предложения ({sentencesCount})
                 </button>
                 <button
                     css={buttonStyle(cardType === Collection.VOCABULAR ? '#1c3249' : 'transparent')}
-                    onClick={() => setCardType(Collection.VOCABULAR)}
+                    onClick={() => onUpdateSettings('ukHLQmUsw1eAof3mlxsU', { lastView: Collection.VOCABULAR })}
                 >
                     Слова ({vocabularCount})
                 </button>

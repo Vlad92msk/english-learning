@@ -28,6 +28,7 @@ export interface Settings {
     repeatTime: number
     firstSide: SettingsfFrstSide
     isLearning: boolean
+    lastView: Collection
 }
 
 export interface Card {

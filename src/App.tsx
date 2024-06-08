@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { LearningList } from "./components/LearningList";
 import { Settings } from "./components/Settings";
 import { Card } from "./components/Card";
@@ -29,19 +29,16 @@ const appStyle = css(`
 `)
 
 
-function App() {
-    const [cardType, setCardType] = useState<Collection>(Collection.VOCABULAR);
 
+function App() {
     const {
-        data: [settings = { type: SettingsTypeEnum.SIDE_1, firstSide: SettingsfFrstSide.NATIVE, isLearning: true, isRepeat: false, repeatTime: 300000 }],
+        data: [settings = { type: SettingsTypeEnum.SIDE_1, firstSide: SettingsfFrstSide.NATIVE, isLearning: true, isRepeat: false, repeatTime: 300000, lastView: Collection.VOCABULAR }],
         onUpdate: settingsUpdate,
-        isLoading: settingsLoading,
     } = useGetData<SettingsType>(Collection.SETTINGS);
 
     const {
-        data: [{ lastCardId } = { lastCardId: 'rIH3KYFr8Jfc4oUbBTZE' }],
+        data: [{ lastCardId: lastCardIdSentencs } = { lastCardId: '' }, {lastCardId: lastCardIdVocabular} = { lastCardId: '' }],
         onUpdate: studyingOnUpdate,
-        isLoading: studyingIsLoading,
     } = useGetData<Studying>(Collection.STUDYING);
 
     const {
@@ -49,7 +46,6 @@ function App() {
         onRemove: sentencesOnRemove,
         onUpdate: sentencesOnUpdate,
         onAdd: sentencesOnAdd,
-        isLoading: sentencesIsLoading,
     } = useGetData<CardGet>(Collection.SENTENCES, { isLearning: settings.isLearning });
 
     const {
@@ -57,24 +53,24 @@ function App() {
         onRemove: vocabularOnRemove,
         onUpdate: vocabularOnUpdate,
         onAdd: vocabularOnAdd,
-        isLoading: vocabularIsLoading,
     } = useGetData<CardGet>(Collection.VOCABULAR, { isLearning: settings.isLearning });
 
+    const isSentences = useMemo(() => settings.lastView === Collection.SENTENCES, [settings.lastView]);
 
-    const isSentences = useMemo(() => cardType === Collection.SENTENCES, [cardType]);
     const currentData = useMemo(() => isSentences ? sentencesData : vocabularData, [isSentences, sentencesData, vocabularData]);
     const currentOnRemove = useMemo(() => isSentences ? sentencesOnRemove : vocabularOnRemove, [isSentences, sentencesOnRemove, vocabularOnRemove]);
     const currentOnUpdate = useMemo(() => isSentences ? sentencesOnUpdate : vocabularOnUpdate, [isSentences, sentencesOnUpdate, vocabularOnUpdate]);
     const currentOnAdd = useMemo(() => isSentences ? sentencesOnAdd : vocabularOnAdd, [isSentences, sentencesOnAdd, vocabularOnAdd]);
+    const lastCardId = useMemo(() => isSentences ? lastCardIdSentencs : lastCardIdVocabular, [isSentences, lastCardIdSentencs, lastCardIdVocabular]);
 
-    const commonSettings = useMemo(() => ({
+    const commonSettings: SettingsType = useMemo(() => ({
         isRepeat: settings.isRepeat,
         repeatTime: settings.repeatTime,
         isLearning: settings.isLearning,
         type: settings.type,
         firstSide: settings.firstSide,
+        lastView: settings.lastView
     }), [settings]);
-
 
     // console.log('cardType', cardType)
     // console.log('sentencesData', sentencesData)
@@ -86,12 +82,12 @@ function App() {
             <LearningList
                 sentencesCount={sentencesData.length || 0}
                 vocabularCount={vocabularData.length || 0}
-                cardType={cardType}
-                setCardType={setCardType}
+                cardType={commonSettings.lastView}
                 onUpdateSettings={settingsUpdate}
                 isLearning={settings.isLearning}
             />
             <Settings
+                cardType={commonSettings.lastView}
                 settings={commonSettings}
                 onUpdate={settingsUpdate}
                 onAdd={currentOnAdd}
@@ -104,6 +100,7 @@ function App() {
                 onUpdate={currentOnUpdate}
             />
             <Navigation
+                cardType={commonSettings.lastView}
                 lastCardId={lastCardId}
                 onUpdate={studyingOnUpdate}
                 data={currentData}

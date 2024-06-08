@@ -49,20 +49,60 @@ const cardTagsStyle = css`
   }
 `;
 
+const cardDataButtonsStyle = css(`
+    z-index: 1;
+    max-width: 70px;
+    width: 100%;
+    place-self: flex-end;
+    position: absolute;
+    right: 0!important;
+    top: 0!important;
+    display: flex;
+    gap: 5px;
+    justify-content: end;
+    
+    button {
+        position: relative;
+        border: 0!important;
+        font-weight: 100!important;
+        font-size: 10px!important;  
+        width: 50%;
+    }
+    
+`)
+
 const cardDataStyle = css`
   display: flex;
   height: 100%;
   flex-direction: column;
   border: 1px solid #435367;
   background: #0d2136;
+  position: relative;
+  
+  input {
+    width: calc(100% - 100px);
+  }
   
   button {
-  z-index: 1;
-    max-width: 50px;
-    place-self: flex-end;
+    position: absolute;
+    z-index: 1;
     border: 0!important;
     font-weight: 100!important;
-    font-size: 10px!important;
+    font-size: 10px!important;  
+    width: 40px;
+    right: 0
+  }
+    
+  span {
+    font-size: 2em!important;
+     position: absolute;
+     background: #0d2136;
+     position: absolute;
+     left: 0;
+     right: 0;
+     top: 0;
+     bottom: 0;
+     text-align: center;
   }
 `;
 
@@ -81,7 +121,7 @@ const cardData1SideStyle = css`
 
   span {
     position: absolute;
-    height: 100%;
+    height: calc(100% - 24px);
     width: 100%;
     display: flex;
     align-items: center;
@@ -146,8 +186,8 @@ export const Card = React.memo((props: CardProps) => {
         if (data.length === 0) {
             return { isIdiom: false, enValue: '', ruValue: '', isPhrasalVerb: false, id: '' };
         }
-
         const currentIndex = lastCardId ? data.findIndex(card => card.id === lastCardId) : 0;
+
         return data[currentIndex >= 0 ? currentIndex : 0];
     }, [data, lastCardId]);
 
@@ -193,22 +233,37 @@ export const Card = React.memo((props: CardProps) => {
                         value={nativeValue}
                         onChange={event => setNativeValue(event.target.value)}
                     />
-                    <button onClick={(event) => {
-                        event.stopPropagation();
-                        onUpdate(id, { ruValue: nativeValue });
-                        setIsChangeNative(false);
-                    }}>ok</button>
+                    <div css={cardDataButtonsStyle}>
+                        <button onClick={(event) => {
+                            event.stopPropagation();
+                            setNativeValue(ruValue);
+                            setIsChangeNative(false);
+                        }}
+                        >
+                            x
+                        </button>
+                        <button onClick={(event) => {
+                            event.stopPropagation();
+                            onUpdate(id, {ruValue: nativeValue});
+                            setIsChangeNative(false);
+                        }}>ok
+                        </button>
+                    </div>
                 </div>
             );
         }
 
         return (
             <div css={cardDataStyle}>
-                <button onClick={(event) => { event.stopPropagation(); setIsChangeNative(true) }}>set</button>
+                <button onClick={(event) => {
+                    event.stopPropagation();
+                    setIsChangeNative(true)
+                }}>set
+                </button>
                 <span>{nativeValue}</span>
             </div>
         );
-    }, [id, isChangeNative, nativeValue, onUpdate]);
+    }, [id, isChangeNative, nativeValue, onUpdate, ruValue]);
 
     const learningValueComponent = useMemo(() => {
         if (isChangeLearning) {
@@ -219,25 +274,39 @@ export const Card = React.memo((props: CardProps) => {
                         value={learningValue}
                         onChange={event => setLearningValue(event.target.value)}
                     />
+                    <div css={cardDataButtonsStyle}>
                     <button onClick={(event) => {
                         event.stopPropagation();
-                        onUpdate(id, { enValue: learningValue });
+                        setLearningValue(enValue);
+                        setIsChangeLearning(false);
+                    }}
+                    >
+                        x
+                    </button>
+                    <button onClick={(event) => {
+                        event.stopPropagation();
+                        onUpdate(id, {enValue: learningValue});
                         setIsChangeLearning(false);
                     }}
                     >
                         ok
                     </button>
+                        </div>
                 </div>
             );
         }
 
         return (
             <div css={cardDataStyle}>
-                <button onClick={(event) => { event.stopPropagation(); setIsChangeLearning(true) }}>set</button>
+                <button onClick={(event) => {
+                    event.stopPropagation();
+                    setIsChangeLearning(true)
+                }}>set
+                </button>
                 <span>{learningValue}</span>
             </div>
         );
-    }, [id, isChangeLearning, learningValue, onUpdate]);
+    }, [enValue, id, isChangeLearning, learningValue, onUpdate]);
 
     return (
         <div css={cardContainerStyle}>
