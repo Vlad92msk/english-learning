@@ -1,5 +1,4 @@
-import React, { useMemo } from "react";
-import { LearningList } from "./components/LearningList";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Settings } from "./components/Settings";
 import { Card } from "./components/Card";
 import { Navigation } from "./components/Navigation";
@@ -9,107 +8,211 @@ import {
     Card as CardGet,
     Collection,
     Settings as SettingsType,
-    SettingsfFrstSide, SettingsTypeEnum, Studying
+    SettingsfFrstSide,
+    SettingsTypeEnum,
+    Studying
 } from "./types";
-import { useGetData } from "./hooks/useGetData";
-
+import { getData } from "./utils/getData";
+import { updateData } from "./utils/updateData";
+import { addData } from "./utils/addData";
+import { deleteData } from "./utils/deleteData";
+import { readLocalFileWithMeta } from "./utils/readExcel";
 
 
 const appStyle = css(`
   background-color: #031525;
   height: calc(100dvh - 100px);
-  display: grid;
+  display: flex;
   padding: 50px;
-  grid-template:
-        "learning-list settings" auto
-        "learning-list card" 1fr
-        "learning-list navigation" 65px
-        /auto          1fr ;
-  column-gap: 30px;        
+  flex-direction: column;
+  column-gap: 30px;    
+  position: relative;    
 `)
+const settingsContainerStyle = (isCompact: boolean) => css`
+    opacity: ${isCompact ? 0 : 1};
+    position: ${isCompact ? 'absolute' : 'relative'};
+    transform: ${isCompact ? 'translateX(-100%)' : 'translateX(0)'};
+`
 
+const settingsInitial: SettingsType = {
+    lastView: Collection.VOCABULAR,
+    isLearning: true,
+    type: SettingsTypeEnum.SIDE_2,
+    firstSide: SettingsfFrstSide.NATIVE,
+    isRepeat: false,
+    repeatTime: 30000,
+}
+
+const localStudyingInitial: Studying = {
+    lastCardId: ''
+}
 
 
 function App() {
-    const {
-        data: [settings = { type: SettingsTypeEnum.SIDE_1, firstSide: SettingsfFrstSide.NATIVE, isLearning: true, isRepeat: false, repeatTime: 300000, lastView: Collection.VOCABULAR }],
-        onUpdate: settingsUpdate,
-    } = useGetData<SettingsType>(Collection.SETTINGS);
+    const [localSettings, setLocalSettings] = useState<{ initial: SettingsType, changed: SettingsType }>({ changed: settingsInitial, initial: settingsInitial });
+    const [localStudying, setLocalStudying] = useState<{
+        initial: { [Collection.VOCABULAR]: Studying, [Collection.SENTENCES]: Studying },
+        changed: { [Collection.VOCABULAR]: Studying, [Collection.SENTENCES]: Studying }
+    }>({
+        changed: { [Collection.VOCABULAR]: localStudyingInitial, [Collection.SENTENCES]: localStudyingInitial },
+        initial: { [Collection.VOCABULAR]: localStudyingInitial, [Collection.SENTENCES]: localStudyingInitial }
+    });
+    const [localSentences, setLocalSentences] = useState<CardGet[]>([]);
+    const [localVocabular, setLocalVocabular] = useState<CardGet[]>([]);
 
-    const {
-        data: [{ lastCardId: lastCardIdSentencs } = { lastCardId: '' }, {lastCardId: lastCardIdVocabular} = { lastCardId: '' }],
-        onUpdate: studyingOnUpdate,
-    } = useGetData<Studying>(Collection.STUDYING);
 
-    const {
-        data: sentencesData,
-        onRemove: sentencesOnRemove,
-        onUpdate: sentencesOnUpdate,
-        onAdd: sentencesOnAdd,
-    } = useGetData<CardGet>(Collection.SENTENCES, { isLearning: settings.isLearning });
+    // Function to fetch and set all initial data
+    useEffect(() => {
+        let isMounted = true; // флаг отмены
 
-    const {
-        data: vocabularData,
-        onRemove: vocabularOnRemove,
-        onUpdate: vocabularOnUpdate,
-        onAdd: vocabularOnAdd,
-    } = useGetData<CardGet>(Collection.VOCABULAR, { isLearning: settings.isLearning });
+        const fetchData = async () => {
+            let sentences: CardGet[];
+            let vocabular: CardGet[];
 
-    const isSentences = useMemo(() => settings.lastView === Collection.SENTENCES, [settings.lastView]);
+            let settings: SettingsType[];
+            let studying: Studying[];
+                try {
+                    settings = await getData<SettingsType>(Collection.SETTINGS);
+                } catch (error) {
+                    // console.error("Error fetching sentences from database:", error);
+                    settings = [settingsInitial];
+                }
 
-    const currentData = useMemo(() => isSentences ? sentencesData : vocabularData, [isSentences, sentencesData, vocabularData]);
-    const currentOnRemove = useMemo(() => isSentences ? sentencesOnRemove : vocabularOnRemove, [isSentences, sentencesOnRemove, vocabularOnRemove]);
-    const currentOnUpdate = useMemo(() => isSentences ? sentencesOnUpdate : vocabularOnUpdate, [isSentences, sentencesOnUpdate, vocabularOnUpdate]);
-    const currentOnAdd = useMemo(() => isSentences ? sentencesOnAdd : vocabularOnAdd, [isSentences, sentencesOnAdd, vocabularOnAdd]);
-    const lastCardId = useMemo(() => isSentences ? lastCardIdSentencs : lastCardIdVocabular, [isSentences, lastCardIdSentencs, lastCardIdVocabular]);
+                try {
+                    studying = await getData<Studying>(Collection.STUDYING);
+                } catch (error) {
+                    // console.error("Error fetching sentences from database:", error);
+                    studying = [localStudyingInitial];
+                }
 
-    const commonSettings: SettingsType = useMemo(() => ({
-        isRepeat: settings.isRepeat,
-        repeatTime: settings.repeatTime,
-        isLearning: settings.isLearning,
-        type: settings.type,
-        firstSide: settings.firstSide,
-        lastView: settings.lastView
-    }), [settings]);
+                try {
+                    sentences = await getData<CardGet>(Collection.SENTENCES, { isLearning: settings[0].isLearning });
+                } catch (error) {
+                    // console.error("Error fetching sentences from database:", error);
+                    sentences = await readLocalFileWithMeta<CardGet>("mock/sentences.xlsx");
+                }
 
-    // console.log('cardType', cardType)
-    // console.log('sentencesData', sentencesData)
-    // console.log('vocabularData', vocabularData)
-    // console.log('currentData', currentData)
+                try {
+                    vocabular = await getData<CardGet>(Collection.VOCABULAR, { isLearning: settings[0].isLearning });
+                } catch (error) {
+                    // console.error("Error fetching vocabular from database:", error);
+                    vocabular = await readLocalFileWithMeta<CardGet>("mock/vocabular.xlsx");
+                }
 
+                if (isMounted) {
+                    setLocalSettings({ initial: settings[0], changed: settings[0] });
+                    setLocalStudying({ initial: { [Collection.VOCABULAR]: studying[0], [Collection.SENTENCES]: studying[0] }, changed: { [Collection.VOCABULAR]: studying[0], [Collection.SENTENCES]: studying[0] } });
+                    setLocalSentences(sentences);
+                    setLocalVocabular(vocabular);
+                }
+
+        };
+
+        fetchData();
+
+        return () => {
+            isMounted = false; // отменяем монтирование
+        };
+    }, []);
+
+    // Update local settings
+    const handleSettingsUpdate = useCallback((updatedSettings: Partial<SettingsType>) => {
+        setLocalSettings(prev => ({ ...prev, changed: {...prev.changed, ...updatedSettings } }));
+    }, []);
+
+    // Update local studying progress
+    const handleStudyingUpdate = useCallback((updatedStudying: Partial<Studying>) => {
+        setLocalStudying(prev => ({
+            ...prev,
+            changed: {
+                ...prev.changed,
+                [localSettings.changed.lastView]:
+                    {
+                        ...prev.changed[localSettings.changed.lastView],
+                        ...updatedStudying
+                    }
+            }
+        }));
+    }, [localSettings.changed.lastView]);
+
+    // Update local sentences data
+    const handleSentencesUpdate = useCallback((id: string, updatedData: Partial<CardGet>) => {
+        setLocalSentences(prev => prev.map(item => item.id === id ? { ...item, ...updatedData } : item));
+        updateData<CardGet>(Collection.SENTENCES, id, updatedData);
+    }, []);
+
+    // Update local vocabular data
+    const handleVocabularUpdate = useCallback((id: string, updatedData: Partial<CardGet>) => {
+        setLocalVocabular(prev => prev.map(item => item.id === id ? { ...item, ...updatedData } : item));
+        updateData(Collection.VOCABULAR, id, updatedData);
+    }, []);
+
+    // Update database periodically
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (JSON.stringify(localSettings.changed) !== JSON.stringify(localSettings.initial)) {
+                updateData(Collection.SETTINGS, 'settings', localSettings.changed);
+            }
+
+            if (JSON.stringify(localStudying.changed) !== JSON.stringify(localStudying.initial)) {
+                updateData(Collection.STUDYING, localSettings.changed.lastView, localStudying.changed[localSettings.changed.lastView]);
+            }
+        }, 300000); // 5 minutes
+
+        return () => clearInterval(interval);
+    }, [localSettings, localStudying]);
+
+
+    const { currentCards, onUpdateCards } = useMemo(() => {
+        if (localSettings.changed?.lastView === Collection.SENTENCES) return (
+            {
+                currentCards: localSentences,
+                onUpdateCards: handleSentencesUpdate
+            }
+        )
+        else return (
+            {
+                currentCards: localVocabular,
+                onUpdateCards: handleVocabularUpdate
+            }
+        )
+    }, [handleSentencesUpdate, handleVocabularUpdate, localSentences, localSettings.changed?.lastView, localVocabular]);
+
+    const [isCompact, setCompact] = useState(false)
     return (
         <div css={appStyle}>
-            <LearningList
-                sentencesCount={sentencesData.length || 0}
-                vocabularCount={vocabularData.length || 0}
-                cardType={commonSettings.lastView}
-                onUpdateSettings={settingsUpdate}
-                isLearning={settings.isLearning}
-            />
-            <Settings
-                cardType={commonSettings.lastView}
-                settings={commonSettings}
-                onUpdate={settingsUpdate}
-                onAdd={currentOnAdd}
-            />
+            <button onClick={() => setCompact(prev => !prev)}>compact</button>
+
+            <div css={settingsContainerStyle(isCompact)}>
+                <Settings
+                    sentencesCount={localSentences.length || 0}
+                    vocabularCount={localVocabular.length || 0}
+                    onUpdateSettings={handleSettingsUpdate}
+                    isLearning={localSettings.changed?.isLearning}
+                    cardType={localSettings.changed.lastView}
+                    settings={localSettings.changed}
+                    onSettingsUpdate={handleSettingsUpdate}
+                    onAddNewCard={(data) => addData(localSettings.changed.lastView, data)}
+                />
+            </div>
             <Card
-                settings={commonSettings}
-                lastCardId={lastCardId}
-                data={currentData}
-                onRemove={currentOnRemove}
-                onUpdate={currentOnUpdate}
+                settings={localSettings.changed}
+                lastCardId={localStudying.changed[localSettings.changed.lastView].lastCardId}
+                cards={currentCards}
+                onRemoveCard={(id) => deleteData(localSettings.changed.lastView, id)}
+                onUpdateCard={onUpdateCards}
             />
             <Navigation
-                cardType={commonSettings.lastView}
-                lastCardId={lastCardId}
-                onUpdate={studyingOnUpdate}
-                data={currentData}
-                cardUpdate={currentOnUpdate}
-                settings={commonSettings}
+                lastCardId={localStudying.changed[localSettings.changed.lastView].lastCardId}
+                onStudyingUpdate={handleStudyingUpdate}
+                cards={currentCards}
+                onCardUpdate={onUpdateCards}
+                settings={localSettings.changed}
             />
         </div>
     );
 }
+
 export default App;
 
 

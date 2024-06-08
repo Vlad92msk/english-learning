@@ -45,23 +45,22 @@ const boxStyle = css(`
 `)
 
 interface NavigationProps {
-    lastCardId: string
-    cardType: Collection
-    data: CardGET[]
+    lastCardId?: string
+    cards: CardGET[]
     settings: SettingsGET
-    cardUpdate: (id: string, data: Partial<CardGET>) => Promise<void>
-    onUpdate: (id: string, data: Partial<Studying>) => Promise<void>
+    onCardUpdate: (id: string, updatedData: Partial<CardGET>) => void
+    onStudyingUpdate: (updatedStudying: Studying) => void
 }
 export const Navigation = React.memo((props: NavigationProps) => {
-    const { cardUpdate, data, settings: { repeatTime, isRepeat }, lastCardId, onUpdate, cardType } = props;
+    const { onCardUpdate, cards, settings: { repeatTime, isRepeat }, lastCardId, onStudyingUpdate } = props;
 
-    const currentIndex1 = (!lastCardId?.length) ? 0 : data?.findIndex(card => card.id === lastCardId) || 0
+    const currentIndex1 = (!lastCardId?.length) ? 0 : cards?.findIndex(card => card.id === lastCardId) || 0
     const currentIndex = currentIndex1 < 0 ? 0 : currentIndex1
 
-    const nextIndex = currentIndex === data?.length - 1 ? 0 : currentIndex + 1
-    const prevIndex = currentIndex === 0 ? data?.length - 1 : currentIndex - 1
+    const nextIndex = currentIndex === cards?.length - 1 ? 0 : currentIndex + 1
+    const prevIndex = currentIndex === 0 ? cards?.length - 1 : currentIndex - 1
 
-    const currentCard = data[currentIndex]
+    const currentCard = cards[currentIndex]
 
     const [audioURL, setAudioURL] = useState<string | null>(null);
 
@@ -79,16 +78,16 @@ export const Navigation = React.memo((props: NavigationProps) => {
     }, []);
 
     const handleNextCard = useCallback(() => {
-        if (data.length > 0 && nextIndex && data[nextIndex].id) {
-            onUpdate(cardType, {lastCardId: data[nextIndex].id})
+        if (cards.length > 0 && nextIndex && cards[nextIndex].id) {
+            onStudyingUpdate({lastCardId: cards[nextIndex].id})
         }
-    }, [cardType, data, nextIndex, onUpdate])
+    }, [cards, nextIndex, onStudyingUpdate])
 
     const handlePrevCard = useCallback(() => {
-        if (data.length > 0 && prevIndex >= 0 && data[prevIndex].id) {
-            onUpdate(cardType, {lastCardId: data[prevIndex].id})
+        if (cards.length > 0 && prevIndex >= 0 && cards[prevIndex].id) {
+            onStudyingUpdate({ lastCardId: cards[prevIndex].id })
         }
-    }, [cardType, data, onUpdate, prevIndex])
+    }, [cards, onStudyingUpdate, prevIndex])
 
     useEffect(() => {
         if (!audioURL) return;
@@ -111,14 +110,14 @@ export const Navigation = React.memo((props: NavigationProps) => {
     }, [audioURL, handleNextCard, isRepeat, repeatTime]);
 
     return <div css={navigationStyleMain}>
-        <span>{currentIndex + 1}/{data?.length}</span>
+        <span>{currentIndex + 1}/{cards?.length}</span>
         <div css={navigationStyle}>
             <button onClick={handlePrevCard}>prev</button>
             <div css={boxStyle}>
                 <span>Продолжаем учить?</span>
                 <select
                     value={currentCard?.isLearning ? 'true' : 'false'}
-                    onChange={(e) => cardUpdate(currentCard.id, {isLearning: e.target.value === 'true'})}
+                    onChange={(e) => onCardUpdate(currentCard.id, {isLearning: e.target.value === 'true'})}
                 >
                     <option value='true'>Да</option>
                     <option value='false'>Нет</option>

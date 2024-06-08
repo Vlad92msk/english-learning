@@ -28,7 +28,7 @@ export interface Settings {
     repeatTime: number
     firstSide: SettingsfFrstSide
     isLearning: boolean
-    lastView: Collection
+    lastView: Collection.SENTENCES | Collection.VOCABULAR
 }
 
 export interface Card {

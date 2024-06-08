@@ -8,9 +8,9 @@ const settingsStyle = css(`
     grid-area: settings;
     display: flex;
     gap: 10px;
-    justify-content: center;
     font-size: 13px;
     flex-wrap: wrap;
+    margin-top: 20px
 `)
 
 const settingsRowStyle = css`
@@ -34,7 +34,7 @@ const settingsBoxStyle = css`
     padding-right: 15px;
     width: 150px;
     height: 62px;
-    justify-content: center;
+    justify-content: space-around;
 `
 
 const radioGroupStyle = css`
@@ -55,14 +55,49 @@ const uploadBoxStyle = css`
     display: flex;
 `
 
+const boxStyle = css(`
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 150px; height: 62px;
+    margin-right: 5px;
+    padding-right: 15px;
+ `)
+
+const learningButtonsStyle = css(`
+    display: flex;
+    gap: 5px;
+    margin-bottom: 20px;
+    width: 150px;
+    height: 62px;
+    margin-right: 5px;
+    padding-right: 15px;
+    
+    button {
+        flex-grow: 1
+    }
+ `)
+
+const learningButtonStyle = (active: boolean) => css(`
+    background: ${active ? 'rgba(4,162,187,0.42)' : 'transparent'}!important;
+`)
+
+const buttonStyle = (color?: string) => css(`
+    background: ${color}!important;
+`)
+
 interface SettingsProps {
+    onUpdateSettings: (updatedSettings: Partial<SettingsGET>) => void
+    sentencesCount: number
+    vocabularCount: number
+    isLearning: boolean
     cardType: Collection
     settings: SettingsGET
-    onAdd:  (data: Card) => Promise<void>
-    onUpdate: (id: string, data: Partial<SettingsGET>) => Promise<void>
+    onAddNewCard:  (data: Card) => Promise<void>
+    onSettingsUpdate: (updatedSettings: Partial<SettingsGET>) => void
 }
 export const Settings = React.memo((props: SettingsProps) => {
-    const { settings, onAdd, onUpdate, cardType } = props;
+    const { settings, onAddNewCard, onSettingsUpdate, cardType, onUpdateSettings, isLearning, vocabularCount, sentencesCount } = props;
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const handleButtonClick = () => {
@@ -78,6 +113,30 @@ export const Settings = React.memo((props: SettingsProps) => {
 
     return (
         <div css={settingsStyle}>
+            <div css={[settingsGroupButtonsStyle]}>
+                <div css={learningButtonsStyle}>
+                    <button css={learningButtonStyle(isLearning)}
+                            onClick={() => onUpdateSettings({isLearning: true})}>Учу
+                    </button>
+                    <button css={learningButtonStyle(!isLearning)}
+                            onClick={() => onUpdateSettings({isLearning: false})}>Выучил
+                    </button>
+                </div>
+                <div css={boxStyle}>
+                    <button
+                        css={buttonStyle(cardType === Collection.SENTENCES ? '#1c3249' : 'transparent')}
+                        onClick={() => onUpdateSettings({lastView: Collection.SENTENCES})}
+                    >
+                        Предложения ({sentencesCount})
+                    </button>
+                    <button
+                        css={buttonStyle(cardType === Collection.VOCABULAR ? '#1c3249' : 'transparent')}
+                        onClick={() => onUpdateSettings({lastView: Collection.VOCABULAR})}
+                    >
+                        Слова ({vocabularCount})
+                    </button>
+                </div>
+            </div>
             <div css={settingsGroupButtonsStyle}>
                 <div css={settingsRowStyle}>
                     <div css={settingsBoxStyle}>
@@ -87,7 +146,7 @@ export const Settings = React.memo((props: SettingsProps) => {
                                 <input
                                     type="radio"
                                     checked={settings?.type === SettingsTypeEnum.SIDE_1}
-                                    onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', { type: SettingsTypeEnum.SIDE_1 })}
+                                    onChange={() => onSettingsUpdate({type: SettingsTypeEnum.SIDE_1})}
                                 />
                                 1 сторону
                             </label>
@@ -95,7 +154,7 @@ export const Settings = React.memo((props: SettingsProps) => {
                                 <input
                                     type="radio"
                                     checked={settings?.type === SettingsTypeEnum.SIDE_2}
-                                    onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', { type: SettingsTypeEnum.SIDE_2 })}
+                                    onChange={() => onSettingsUpdate({ type: SettingsTypeEnum.SIDE_2 })}
                                 />
                                 2 стороны
                             </label>
@@ -109,7 +168,7 @@ export const Settings = React.memo((props: SettingsProps) => {
                                     <input
                                         type="radio"
                                         checked={settings?.firstSide === SettingsfFrstSide.NATIVE }
-                                        onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', { firstSide: SettingsfFrstSide.NATIVE })}
+                                        onChange={() => onSettingsUpdate({ firstSide: SettingsfFrstSide.NATIVE })}
                                     />
                                     ru
                                 </label>
@@ -117,7 +176,7 @@ export const Settings = React.memo((props: SettingsProps) => {
                                     <input
                                         type="radio"
                                         checked={settings?.firstSide === SettingsfFrstSide.LEARNING}
-                                        onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', { firstSide: SettingsfFrstSide.LEARNING })}
+                                        onChange={() => onSettingsUpdate({ firstSide: SettingsfFrstSide.LEARNING })}
                                     />
                                     en
                                 </label>
@@ -133,7 +192,7 @@ export const Settings = React.memo((props: SettingsProps) => {
                                 <input
                                     type="radio"
                                     checked={settings?.isRepeat === true}
-                                    onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', {isRepeat: true})}
+                                    onChange={() => onSettingsUpdate({isRepeat: true})}
                                 />
                                 Да
                             </label>
@@ -141,7 +200,7 @@ export const Settings = React.memo((props: SettingsProps) => {
                                 <input
                                     type="radio"
                                     checked={settings?.isRepeat === false}
-                                    onChange={() => onUpdate('ukHLQmUsw1eAof3mlxsU', {isRepeat: false})}
+                                    onChange={() => onSettingsUpdate({isRepeat: false})}
                                 />
                                 Нет
                             </label>
@@ -152,7 +211,7 @@ export const Settings = React.memo((props: SettingsProps) => {
                             <span>Каждые</span>
                             <select
                                 value={settings?.repeatTime}
-                                onChange={(e) => onUpdate('ukHLQmUsw1eAof3mlxsU', {repeatTime: Number(e.target.value)})}
+                                onChange={(e) => onSettingsUpdate({repeatTime: Number(e.target.value)})}
                             >
                                 <option value={300000}>5 мин</option>
                                 <option value={600000}>10 мин</option>
@@ -166,7 +225,7 @@ export const Settings = React.memo((props: SettingsProps) => {
             </div>
             <div css={uploadBoxStyle}>
                 <button onClick={() => {
-                    onAdd({
+                    onAddNewCard({
                         isLearning: true,
                         enValue: '',
                         ruValue: '',

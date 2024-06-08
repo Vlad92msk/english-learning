@@ -7,6 +7,9 @@ const cardContainerStyle = css`
   perspective: 10000px;
   height: 100%;
   position: relative;
+  span {
+  pointer-events: none
+  }
 `;
 
 const cardStyle = (type: string) => css`
@@ -103,6 +106,7 @@ const cardDataStyle = css`
      top: 0;
      bottom: 0;
      text-align: center;
+     
   }
 `;
 
@@ -156,6 +160,10 @@ const metaRowStyle = css`
     align-items: center;
 `;
 
+const copyButtonStyle = css`
+    bottom: 0
+`
+
 const getCardDataStyle = (type: string, firstSide: string) => css`
   display: flex;
   height: 100%;
@@ -168,14 +176,14 @@ const getCardDataStyle = (type: string, firstSide: string) => css`
 
 interface CardProps {
     settings: SettingsGET
-    lastCardId: string
-    data: CardGET[]
-    onRemove: (id: string) => Promise<void>
-    onUpdate: (id: string, data: Partial<CardGET>) => Promise<void>
+    lastCardId?: string
+    cards: CardGET[]
+    onRemoveCard: (id: string) => Promise<void>
+    onUpdateCard: (id: string, updatedData: Partial<CardGET>) => void
 }
 
 export const Card = React.memo((props: CardProps) => {
-    const { data, lastCardId, onUpdate, onRemove, settings: { firstSide, type } } = props;
+    const { cards, lastCardId, onUpdateCard, onRemoveCard, settings: { firstSide, type } } = props;
     const [visible, setVisible] = useState(firstSide);
     const [isFlipped, setIsFlipped] = useState(false);
     const [isChangeNative, setIsChangeNative] = useState(false);
@@ -183,13 +191,13 @@ export const Card = React.memo((props: CardProps) => {
 
 
     const currentCard = useMemo(() => {
-        if (data.length === 0) {
+        if (cards.length === 0) {
             return { isIdiom: false, enValue: '', ruValue: '', isPhrasalVerb: false, id: '' };
         }
-        const currentIndex = lastCardId ? data.findIndex(card => card.id === lastCardId) : 0;
+        const currentIndex = lastCardId ? cards.findIndex(card => card.id === lastCardId) : 0;
 
-        return data[currentIndex >= 0 ? currentIndex : 0];
-    }, [data, lastCardId]);
+        return cards[currentIndex >= 0 ? currentIndex : 0];
+    }, [cards, lastCardId]);
 
     const { isIdiom, enValue, ruValue, isPhrasalVerb, id } = currentCard;
 
@@ -209,12 +217,12 @@ export const Card = React.memo((props: CardProps) => {
     }, [enValue]);
 
     const handleUpdatePartialVerbs = useCallback(() => {
-        onUpdate(id, { isPhrasalVerb: !isPhrasalVerb });
-    }, [id, isPhrasalVerb, onUpdate]);
+        onUpdateCard(id, { isPhrasalVerb: !isPhrasalVerb });
+    }, [id, isPhrasalVerb, onUpdateCard]);
 
     const handleUpdateIdiom = useCallback(() => {
-        onUpdate(id, { isIdiom: !isIdiom });
-    }, [id, isIdiom, onUpdate]);
+        onUpdateCard(id, { isIdiom: !isIdiom });
+    }, [id, isIdiom, onUpdateCard]);
 
     const handleCardClick = useCallback(() => {
         if (type === SettingsTypeEnum.SIDE_1) {
@@ -222,6 +230,24 @@ export const Card = React.memo((props: CardProps) => {
             setIsFlipped(!isFlipped);
         }
     }, [isFlipped, type]);
+
+    const handleCopyNative = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        e.stopPropagation()
+        navigator.clipboard.writeText(nativeValue).then(() => {
+            console.log('Текст скопирован в буфер обмена');
+        }).catch(err => {
+            console.error('Ошибка при копировании текста:', err);
+        });
+    }, [nativeValue])
+
+    const handleCopyLearning = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        e.stopPropagation()
+        navigator.clipboard.writeText(learningValue).then(() => {
+            console.log('Текст скопирован в буфер обмена');
+        }).catch(err => {
+            console.error('Ошибка при копировании текста:', err);
+        });
+    }, [learningValue])
 
 
     const nativeValueComponent = useMemo(() => {
@@ -244,9 +270,10 @@ export const Card = React.memo((props: CardProps) => {
                         </button>
                         <button onClick={(event) => {
                             event.stopPropagation();
-                            onUpdate(id, {ruValue: nativeValue});
+                            onUpdateCard(id, {ruValue: nativeValue});
                             setIsChangeNative(false);
-                        }}>ok
+                        }}>
+                            ok
                         </button>
                     </div>
                 </div>
@@ -258,12 +285,14 @@ export const Card = React.memo((props: CardProps) => {
                 <button onClick={(event) => {
                     event.stopPropagation();
                     setIsChangeNative(true)
-                }}>set
+                }}>
+                    set
                 </button>
+                <button css={copyButtonStyle} onClick={(e) => handleCopyNative(e)}>copy</button>
                 <span>{nativeValue}</span>
             </div>
         );
-    }, [id, isChangeNative, nativeValue, onUpdate, ruValue]);
+    }, [handleCopyNative, id, isChangeNative, nativeValue, onUpdateCard, ruValue]);
 
     const learningValueComponent = useMemo(() => {
         if (isChangeLearning) {
@@ -285,7 +314,7 @@ export const Card = React.memo((props: CardProps) => {
                     </button>
                     <button onClick={(event) => {
                         event.stopPropagation();
-                        onUpdate(id, {enValue: learningValue});
+                        onUpdateCard(id, {enValue: learningValue});
                         setIsChangeLearning(false);
                     }}
                     >
@@ -301,12 +330,15 @@ export const Card = React.memo((props: CardProps) => {
                 <button onClick={(event) => {
                     event.stopPropagation();
                     setIsChangeLearning(true)
-                }}>set
+                }}>
+                    set
                 </button>
+                <button css={copyButtonStyle} onClick={(e) => handleCopyLearning(e)}>copy</button>
                 <span>{learningValue}</span>
             </div>
         );
-    }, [enValue, id, isChangeLearning, learningValue, onUpdate]);
+    }, [handleCopyLearning, enValue, id, isChangeLearning, learningValue, onUpdateCard]);
+
 
     return (
         <div css={cardContainerStyle}>
@@ -322,7 +354,7 @@ export const Card = React.memo((props: CardProps) => {
                     <button onClick={handleUpdateIdiom}>
                         {isIdiom ? 'no idiom' : 'idiom'}
                     </button>
-                    <button onClick={() => onRemove(id)}>x</button>
+                    <button onClick={() => onRemoveCard(id)}>x</button>
                 </div>
             </div>
             <div css={[cardStyle(type), isFlipped && cardFlippedStyle]} onClick={handleCardClick}>
