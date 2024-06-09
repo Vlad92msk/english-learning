@@ -7,9 +7,10 @@ import { CardContainer } from "./CardContainer";
 const cardContainerStyle = css`
   perspective: 10000px;
   height: 100%;
+  width: calc(100% - 50px);
   position: relative;
   span {
-  pointer-events: none
+    pointer-events: none
   }
 `;
 

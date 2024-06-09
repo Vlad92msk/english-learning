@@ -3,7 +3,9 @@ import React, { useCallback, useEffect, useState } from "react";
 import { css } from '@emotion/react';
 import { getDownloadURL, ref } from "firebase/storage";
 import { storage } from "../index";
-import { Card as CardGET, Collection, Settings as SettingsGET, Studying } from "../types";
+import { Card as CardGET, Settings as SettingsGET, Studying } from "../types";
+import Icon from "./Icon";
+// import { Icon } from "./Icon";
 
 const navigationStyleMain = css(`
     display: flex;
@@ -112,7 +114,9 @@ export const Navigation = React.memo((props: NavigationProps) => {
     return <div css={navigationStyleMain}>
         <span>{currentIndex + 1}/{cards?.length}</span>
         <div css={navigationStyle}>
-            <button onClick={handlePrevCard}>prev</button>
+            <button onClick={handlePrevCard}>
+                <Icon  name="arrow-left-sharp"/>
+            </button>
             <div css={boxStyle}>
                 <span>Продолжаем учить?</span>
                 <select
@@ -124,7 +128,7 @@ export const Navigation = React.memo((props: NavigationProps) => {
                 </select>
             </div>
             <button onClick={handleNextCard}>
-                next
+                <Icon  name="arrow-right-sharp"/>
             </button>
         </div>
     </div>

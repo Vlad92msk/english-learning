@@ -57,6 +57,12 @@ const myStyle = css`
     font-size: 13px;
     cursor: pointer;
   }
+  
+  svg {
+    width: 100%;
+    height: 100%;
+    fill: #d3e1fe;
+  }
 `
 
 const myapp = document.getElementById('root')

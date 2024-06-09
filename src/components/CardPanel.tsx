@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { css } from "@emotion/react";
 import { Card as CardGET } from "../types";
 import { speakText } from "../utils/speakText";
+import Icon from "./Icon";
 
 
 const cardPanelStyle = css`
@@ -24,7 +25,8 @@ const cardPanelStyle = css`
     font-weight: 100!important;
     font-size: 10px!important;  
     width: 40px;
-    right: 0
+    right: 0;
+    transform: translateX(calc(100% + 10px));
   }
     
   span {
@@ -43,15 +45,16 @@ const cardPanelStyle = css`
 
 const cardDataButtonsStyle = css(`
     z-index: 1;
-    max-width: 70px;
-    width: 100%;
+position: absolute;
+right: 0;
+  transform: translateX(10px);
     place-self: flex-end;
-    position: absolute;
     right: 0!important;
     top: 0!important;
     display: flex;
     gap: 5px;
     justify-content: end;
+    flex-direction: column;
     
     button {
         position: relative;
@@ -140,10 +143,14 @@ export const CardPanel = (props: CardPanelProps) => {
                 event.stopPropagation();
                 setIsChangeNative(true)
             }}>
-                set
+                <Icon name={'pencil'} />
             </button>
-            <button css={copyButtonStyle} onClick={(e) => handleCopyNative(e)}>copy</button>
-            <button css={voiceButtonStyle} onClick={(e) => handleVoice(e)}>voice</button>
+            <button css={copyButtonStyle} onClick={(e) => handleCopyNative(e)}>
+                <Icon  name="copy"/>
+            </button>
+            <button css={voiceButtonStyle} onClick={(e) => handleVoice(e)}>
+                <Icon  name="sound"/>
+            </button>
             <span>{currentValue}</span>
         </div>
     );

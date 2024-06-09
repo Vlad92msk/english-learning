@@ -17,6 +17,7 @@ import { updateData } from "./utils/updateData";
 import { addData } from "./utils/addData";
 import { deleteData } from "./utils/deleteData";
 import { readLocalFileWithMeta } from "./utils/readExcel";
+import Icon from "./components/Icon";
 
 
 const appStyle = css(`
@@ -191,7 +192,9 @@ function App() {
     return (
         <>
             <div css={appStyle}>
-                <button css={{ width: 'fit-content' }} onClick={() => setCompact(prev => !prev)}>settings</button>
+                <button css={{ width: 'fit-content' }} onClick={() => setCompact(prev => !prev)}>
+                    <Icon name='menu-burger' />
+                </button>
                 <Card
                     settings={localSettings.changed}
                     lastCardId={localStudying.changed[localSettings.changed.lastView].lastCardId}
