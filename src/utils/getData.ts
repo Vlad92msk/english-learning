@@ -16,6 +16,7 @@ export async function getData<T>(
 
     const q = query(collection(db, collectionName), ...constraints);
     const querySnapshot = await getDocs(q);
+    return Promise.reject()
     return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()

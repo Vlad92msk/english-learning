@@ -1,46 +1,24 @@
-import React from "react";
+import React, { useCallback } from "react";
 /** @jsxImportSource @emotion/react */
 import { css } from '@emotion/react';
 import { Card, Collection, Settings as SettingsGET, SettingsfFrstSide, SettingsTypeEnum } from "../types";
 import { uploadExcelData } from "../utils/uploadExcelData";
+import { downloadExcel } from "../utils/downloadExcel";
 
 const settingsStyle = css(`
-    grid-area: settings;
     display: flex;
     gap: 10px;
     font-size: 13px;
-    flex-wrap: wrap;
-    margin-top: 20px
+    flex-direction: column;
+    height: 100%;
+    gap: 5%;
 `)
 
-const settingsRowStyle = css`
-    display: flex;
-    gap: 10px;
-    text-wrap: nowrap;
-`
-const settingsGroupButtonsStyle = css`
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-`
-
-const settingsBoxStyle = css`
-    display: flex;
-    gap: 5px;
-    flex-direction: column;
-    align-items: center;
-    border-right: 1px solid #435367;
-    margin-right: 5px;
-    padding-right: 15px;
-    width: 150px;
-    height: 62px;
-    justify-content: space-around;
-`
 
 const radioGroupStyle = css`
     display: flex;
     gap: 10px;
-    flex-wrap: wrap;
+    flex-direction: column;
 `
 
 const radioLabelStyle = css`
@@ -50,24 +28,23 @@ const radioLabelStyle = css`
     cursor: pointer;
 `
 const uploadBoxStyle = css`
-    margin-left: auto;
     gap: 10px;
     display: flex;
+    width: 100%;
+    justify-content: space-around;
+    margin-top: auto;
+    height: 50px;
+    
+    > * {
+        flex-grow: 1;
+        height: 100%;
+    }
 `
 
 const boxStyle = css(`
     display: flex;
     flex-direction: column;
     gap: 5px;
-    width: 150px; height: 62px;
-    margin-right: 5px;
-    padding-right: 15px;
- `)
-
-const learningButtonsStyle = css(`
-    display: flex;
-    gap: 5px;
-    margin-bottom: 20px;
     width: 150px;
     height: 62px;
     margin-right: 5px;
@@ -77,6 +54,14 @@ const learningButtonsStyle = css(`
         flex-grow: 1
     }
  `)
+
+const boxGroupStyle = css(`
+    width: 100%;
+    justify-content: start;
+    display: flex;
+    gap: 20px;
+`)
+
 
 const learningButtonStyle = (active: boolean) => css(`
     background: ${active ? 'rgba(4,162,187,0.42)' : 'transparent'}!important;
@@ -95,26 +80,31 @@ interface SettingsProps {
     settings: SettingsGET
     onAddNewCard:  (data: Card) => Promise<void>
     onSettingsUpdate: (updatedSettings: Partial<SettingsGET>) => void
+    cards: Card[]
 }
 export const Settings = React.memo((props: SettingsProps) => {
-    const { settings, onAddNewCard, onSettingsUpdate, cardType, onUpdateSettings, isLearning, vocabularCount, sentencesCount } = props;
+    const { settings, onAddNewCard, onSettingsUpdate, cardType, onUpdateSettings, isLearning, vocabularCount, sentencesCount, cards } = props;
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const handleButtonClick = () => {
         fileInputRef.current?.click();
     };
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleDownloadExcel = () => {
+        downloadExcel(cards)
+    };
+
+    const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            await uploadExcelData<Card>(file, cardType);
+            await uploadExcelData<Card>(file, cardType, cards);
         }
-    };
+    }, [cardType, cards])
 
     return (
         <div css={settingsStyle}>
-            <div css={[settingsGroupButtonsStyle]}>
-                <div css={learningButtonsStyle}>
+            <div css={boxGroupStyle}>
+                <div css={boxStyle}>
                     <button css={learningButtonStyle(isLearning)}
                             onClick={() => onUpdateSettings({isLearning: true})}>Учу
                     </button>
@@ -137,93 +127,92 @@ export const Settings = React.memo((props: SettingsProps) => {
                     </button>
                 </div>
             </div>
-            <div css={settingsGroupButtonsStyle}>
-                <div css={settingsRowStyle}>
-                    <div css={settingsBoxStyle}>
-                        <span>Показывать</span>
+            <div css={boxGroupStyle}>
+                <div css={boxStyle}>
+                    <span>Показывать</span>
+                    <div css={radioGroupStyle}>
+                        <label css={radioLabelStyle}>
+                            <input
+                                type="radio"
+                                checked={settings?.type === SettingsTypeEnum.SIDE_1}
+                                onChange={() => onSettingsUpdate({type: SettingsTypeEnum.SIDE_1})}
+                            />
+                            1 сторону
+                        </label>
+                        <label css={radioLabelStyle}>
+                            <input
+                                type="radio"
+                                checked={settings?.type === SettingsTypeEnum.SIDE_2}
+                                onChange={() => onSettingsUpdate({type: SettingsTypeEnum.SIDE_2})}
+                            />
+                            2 стороны
+                        </label>
+                    </div>
+                </div>
+                {settings?.type === SettingsTypeEnum.SIDE_2 && (
+                    <div css={boxStyle}>
+                        <span>Первая сторона</span>
                         <div css={radioGroupStyle}>
                             <label css={radioLabelStyle}>
                                 <input
                                     type="radio"
-                                    checked={settings?.type === SettingsTypeEnum.SIDE_1}
-                                    onChange={() => onSettingsUpdate({type: SettingsTypeEnum.SIDE_1})}
+                                    checked={settings?.firstSide === SettingsfFrstSide.NATIVE}
+                                    onChange={() => onSettingsUpdate({firstSide: SettingsfFrstSide.NATIVE})}
                                 />
-                                1 сторону
+                                ru
                             </label>
                             <label css={radioLabelStyle}>
                                 <input
                                     type="radio"
-                                    checked={settings?.type === SettingsTypeEnum.SIDE_2}
-                                    onChange={() => onSettingsUpdate({ type: SettingsTypeEnum.SIDE_2 })}
+                                    checked={settings?.firstSide === SettingsfFrstSide.LEARNING}
+                                    onChange={() => onSettingsUpdate({firstSide: SettingsfFrstSide.LEARNING})}
                                 />
-                                2 стороны
+                                en
                             </label>
                         </div>
                     </div>
-                    {settings?.type === SettingsTypeEnum.SIDE_2 && (
-                        <div css={settingsBoxStyle}>
-                            <span>Первая сторона</span>
-                            <div css={radioGroupStyle}>
-                                <label css={radioLabelStyle}>
-                                    <input
-                                        type="radio"
-                                        checked={settings?.firstSide === SettingsfFrstSide.NATIVE }
-                                        onChange={() => onSettingsUpdate({ firstSide: SettingsfFrstSide.NATIVE })}
-                                    />
-                                    ru
-                                </label>
-                                <label css={radioLabelStyle}>
-                                    <input
-                                        type="radio"
-                                        checked={settings?.firstSide === SettingsfFrstSide.LEARNING}
-                                        onChange={() => onSettingsUpdate({ firstSide: SettingsfFrstSide.LEARNING })}
-                                    />
-                                    en
-                                </label>
-                            </div>
-                        </div>
-                    )}
-                </div>
-                <div css={settingsRowStyle}>
-                    <div css={settingsBoxStyle}>
-                        <span>Листать</span>
-                        <div css={radioGroupStyle}>
-                            <label css={radioLabelStyle}>
-                                <input
-                                    type="radio"
-                                    checked={settings?.isRepeat === true}
-                                    onChange={() => onSettingsUpdate({isRepeat: true})}
-                                />
-                                Да
-                            </label>
-                            <label css={radioLabelStyle}>
-                                <input
-                                    type="radio"
-                                    checked={settings?.isRepeat === false}
-                                    onChange={() => onSettingsUpdate({isRepeat: false})}
-                                />
-                                Нет
-                            </label>
-                        </div>
-                    </div>
-                    {settings?.isRepeat && (
-                        <div css={settingsBoxStyle}>
-                            <span>Каждые</span>
-                            <select
-                                value={settings?.repeatTime}
-                                onChange={(e) => onSettingsUpdate({repeatTime: Number(e.target.value)})}
-                            >
-                                <option value={300000}>5 мин</option>
-                                <option value={600000}>10 мин</option>
-                                <option value={1200000}>20 мин</option>
-                                <option value={1800000}>30 мин</option>
-                                <option value={2400000}>40 мин</option>
-                            </select>
-                        </div>
-                    )}
-                </div>
+                )}
             </div>
-            <div css={uploadBoxStyle}>
+            <div css={boxGroupStyle}>
+                <div css={boxStyle}>
+                    <span>Листать</span>
+                    <div css={radioGroupStyle}>
+                        <label css={radioLabelStyle}>
+                            <input
+                                type="radio"
+                                checked={settings?.isRepeat === true}
+                                onChange={() => onSettingsUpdate({isRepeat: true})}
+                            />
+                            Да
+                        </label>
+                        <label css={radioLabelStyle}>
+                            <input
+                                type="radio"
+                                checked={settings?.isRepeat === false}
+                                onChange={() => onSettingsUpdate({isRepeat: false})}
+                            />
+                            Нет
+                        </label>
+                    </div>
+                </div>
+                {settings?.isRepeat && (
+                    <div css={boxStyle}>
+                        <span>Каждые</span>
+                        <select
+                            value={settings?.repeatTime}
+                            onChange={(e) => onSettingsUpdate({repeatTime: Number(e.target.value)})}
+                        >
+                            <option value={300000}>5 мин</option>
+                            <option value={600000}>10 мин</option>
+                            <option value={1200000}>20 мин</option>
+                            <option value={1800000}>30 мин</option>
+                            <option value={2400000}>40 мин</option>
+                        </select>
+                    </div>
+                )}
+            </div>
+
+            <div css={[uploadBoxStyle]}>
                 <button onClick={() => {
                     onAddNewCard({
                         isLearning: true,
@@ -235,6 +224,7 @@ export const Settings = React.memo((props: SettingsProps) => {
                     } as Card)
                 }}>+
                 </button>
+                <button onClick={handleDownloadExcel}>Скачать файл</button>
                 <input
                     type="file"
                     accept=".xlsx, .xls"

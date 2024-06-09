@@ -10,10 +10,11 @@ const splitIntoChunks = <T>(array: T[], chunkSize: number): T[][] => {
     return chunks;
 }
 
-export const uploadExcelData = async <T, >(file: File, collectionName:  Collection, chunkSize: number = 50) => {
+export const uploadExcelData = async <T extends { enValue: string }>(file: File, collectionName:  Collection, currentCards: T[], chunkSize: number = 50) => {
     try {
         const cards = await readExcel<T>(file);
-        const chunks = splitIntoChunks(cards, chunkSize);
+        const filteredCards = cards.filter(card => !currentCards.some(currentCard => currentCard.enValue.trim().toLowerCase() === card.enValue.trim().toLowerCase()));
+        const chunks = splitIntoChunks(filteredCards, chunkSize);
 
         for (const chunk of chunks) {
             await Promise.all(chunk.map(async (card) => {
@@ -22,7 +23,7 @@ export const uploadExcelData = async <T, >(file: File, collectionName:  Collecti
                     dateAdded: new Date(),
                 }
                 await addData(collectionName, newCard);
-            })).finally(() => console.log(`Final, Загружено: ${cards?.length || 0} файлов, Порций: ${chunks?.length || 0}`));
+            })).finally(() => console.log(`Final, Загружено: ${filteredCards?.length || 0} файлов, Порций: ${chunks?.length || 0}`));
         }
         // alert('Data successfully uploaded.');
     } catch (error: any) {

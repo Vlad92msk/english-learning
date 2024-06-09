@@ -30,8 +30,17 @@ const appStyle = css(`
 `)
 const settingsContainerStyle = (isCompact: boolean) => css`
     opacity: ${isCompact ? 0 : 1};
-    position: ${isCompact ? 'absolute' : 'relative'};
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    background: #031525;
+    padding: 20px;
+    z-index: 99;
+    transition: 1s;
     transform: ${isCompact ? 'translateX(-100%)' : 'translateX(0)'};
+    display: flex;
+    flex-direction: column;
+    gap: 5%;
 `
 
 const settingsInitial: SettingsType = {
@@ -178,13 +187,30 @@ function App() {
         )
     }, [handleSentencesUpdate, handleVocabularUpdate, localSentences, localSettings.changed?.lastView, localVocabular]);
 
-    const [isCompact, setCompact] = useState(false)
+    const [isCompact, setCompact] = useState(true)
     return (
-        <div css={appStyle}>
-            <button onClick={() => setCompact(prev => !prev)}>compact</button>
-
+        <>
+            <div css={appStyle}>
+                <button css={{ width: 'fit-content' }} onClick={() => setCompact(prev => !prev)}>settings</button>
+                <Card
+                    settings={localSettings.changed}
+                    lastCardId={localStudying.changed[localSettings.changed.lastView].lastCardId}
+                    cards={currentCards}
+                    onRemoveCard={(id) => deleteData(localSettings.changed.lastView, id)}
+                    onUpdateCard={onUpdateCards}
+                />
+                <Navigation
+                    lastCardId={localStudying.changed[localSettings.changed.lastView].lastCardId}
+                    onStudyingUpdate={handleStudyingUpdate}
+                    cards={currentCards}
+                    onCardUpdate={onUpdateCards}
+                    settings={localSettings.changed}
+                />
+            </div>
             <div css={settingsContainerStyle(isCompact)}>
+                <button css={{ marginLeft: 'auto!important' }} onClick={() => setCompact(prev => !prev)}>x</button>
                 <Settings
+                    cards={currentCards}
                     sentencesCount={localSentences.length || 0}
                     vocabularCount={localVocabular.length || 0}
                     onUpdateSettings={handleSettingsUpdate}
@@ -195,22 +221,9 @@ function App() {
                     onAddNewCard={(data) => addData(localSettings.changed.lastView, data)}
                 />
             </div>
-            <Card
-                settings={localSettings.changed}
-                lastCardId={localStudying.changed[localSettings.changed.lastView].lastCardId}
-                cards={currentCards}
-                onRemoveCard={(id) => deleteData(localSettings.changed.lastView, id)}
-                onUpdateCard={onUpdateCards}
-            />
-            <Navigation
-                lastCardId={localStudying.changed[localSettings.changed.lastView].lastCardId}
-                onStudyingUpdate={handleStudyingUpdate}
-                cards={currentCards}
-                onCardUpdate={onUpdateCards}
-                settings={localSettings.changed}
-            />
-        </div>
-    );
+        </>
+    )
+        ;
 }
 
 export default App;

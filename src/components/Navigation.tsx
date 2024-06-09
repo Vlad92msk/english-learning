@@ -28,13 +28,13 @@ const navigationStyle = css(`
         position: absolute;
         left: 0;
         width: 30%;
-        height: 100%;
+        height: 130%;
     }
     button:last-of-type {
         position: absolute;
         right: 0;
         width: 30%;
-        height: 100%;
+        height: 130%;
     }
 `)
 
