@@ -4,11 +4,23 @@ import { css } from '@emotion/react';
 import { Card as CardGET, Settings as SettingsGET } from "../types";
 import { CardContainer } from "./CardContainer";
 
-const cardContainerStyle = css`
+const focuseStyle = css(`
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1111;
+    width: calc(100% - 140px);
+    background: #031425;
+    padding: 20px;
+    height: calc(100% - 64px);
+`)
+
+const cardContainerStyle = (isFocuse: boolean) => css`
   perspective: 10000px;
   height: 100%;
   width: calc(100% - 50px);
   position: relative;
+  ${isFocuse && focuseStyle}
   span {
     pointer-events: none
   }
@@ -36,10 +48,12 @@ const tagStyle = css`
   font-size: 12px;
 `;
 
-const metaRowStyle = css`
+const metaRowStyle = (isFocus: boolean) => css`
     display: flex;
     justify-content: space-between;
     align-items: center;
+    opacity: ${isFocus ? 0 : 1};
+    pointerEvents: ${isFocus ? 'auto' : 'none'};
 `;
 
 
@@ -56,6 +70,7 @@ const defaultCard: CardGET = {
 }
 
 interface CardProps {
+    isFocus: boolean
     settings: SettingsGET
     lastCardId?: string
     cards: CardGET[]
@@ -64,7 +79,7 @@ interface CardProps {
 }
 
 export const Card = React.memo((props: CardProps) => {
-    const { cards, lastCardId, onUpdateCard, onRemoveCard, settings: { firstSide, type } } = props;
+    const { cards, lastCardId, onUpdateCard, onRemoveCard, isFocus, settings: { firstSide, type } } = props;
 
     const { isIdiom, enValue, ruValue, isPhrasalVerb, id, dateAdded, isLearning } = useMemo(() => {
         if (cards.length === 0) return defaultCard;
@@ -99,8 +114,8 @@ export const Card = React.memo((props: CardProps) => {
     }, [id, isIdiom, onUpdateCard]);
 
     return (
-        <div css={cardContainerStyle}>
-            <div css={metaRowStyle}>
+        <div css={cardContainerStyle(isFocus)}>
+            <div css={metaRowStyle(isFocus)}>
                 <div css={cardTagsStyle}>
                     {isPhrasalVerb && <span css={tagStyle}>#phrasal verb</span>}
                     {isIdiom && <span css={tagStyle}>#idiom</span>}

@@ -7,6 +7,9 @@ import { ReactComponent as EditIcon } from '../icons/edit.svg';
 import { ReactComponent as MenuBurgerIcon } from '../icons/menu-burger.svg';
 import { ReactComponent as SoundIcon } from '../icons/sound.svg';
 import { ReactComponent as PencilIcon } from '../icons/pencil.svg';
+import { ReactComponent as PauseIcon } from '../icons/pause.svg';
+import { ReactComponent as PlayIcon } from '../icons/play.svg';
+import { ReactComponent as FocusIcon } from '../icons/focus.svg';
 
 const icons = {
     'arrow-left-sharp': ArrowLeftSharpIcon,
@@ -17,11 +20,14 @@ const icons = {
     'menu-burger': MenuBurgerIcon,
     'sound': SoundIcon,
     'pencil': PencilIcon,
+    'play': PlayIcon,
+    'pause': PauseIcon,
+    'focus': FocusIcon,
     // добавьте остальные иконки сюда
 };
 
 interface IconProps {
-    name: 'arrow-left-sharp' | 'arrow-right-sharp' | 'copy' | 'volume-up' | 'edit' | 'menu-burger' | 'sound' | 'pencil';
+    name: 'arrow-left-sharp' | 'arrow-right-sharp' | 'copy' | 'volume-up' | 'edit' | 'menu-burger' | 'sound' | 'pencil' | 'play' | 'pause' | 'focus';
     size?: number;
 }
 

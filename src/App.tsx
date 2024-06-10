@@ -36,7 +36,7 @@ const settingsContainerStyle = (isCompact: boolean) => css`
     bottom: 0;
     background: #031525;
     padding: 20px;
-    z-index: 99;
+    z-index: 999;
     transition: 1s;
     transform: ${isCompact ? 'translateX(-100%)' : 'translateX(0)'};
     display: flex;
@@ -50,7 +50,7 @@ const settingsInitial: SettingsType = {
     type: SettingsTypeEnum.SIDE_2,
     firstSide: SettingsfFrstSide.NATIVE,
     isRepeat: false,
-    repeatTime: 400,
+    repeatTime: 60000,
 }
 
 const localStudyingInitial: Studying = {
@@ -176,42 +176,69 @@ function App() {
     const { currentCards, onUpdateCards } = useMemo(() => {
         if (localSettings.changed?.lastView === Collection.SENTENCES) return (
             {
-                currentCards: localSentences,
+                currentCards: localSentences.filter(({isLearning}) => isLearning === localSettings.changed.isLearning),
                 onUpdateCards: handleSentencesUpdate
             }
         )
         else return (
             {
-                currentCards: localVocabular,
+                currentCards: localVocabular.filter(({isLearning}) => isLearning === localSettings.changed.isLearning),
                 onUpdateCards: handleVocabularUpdate
             }
         )
-    }, [handleSentencesUpdate, handleVocabularUpdate, localSentences, localSettings.changed?.lastView, localVocabular]);
+    }, [handleSentencesUpdate, handleVocabularUpdate, localSentences, localSettings.changed.isLearning, localSettings.changed?.lastView, localVocabular]);
 
     const [isCompact, setCompact] = useState(true)
+    const [isFocus, setIsFocus] = useState(false)
     return (
         <>
             <div css={appStyle}>
-                <button css={{ width: 'fit-content' }} onClick={() => setCompact(prev => !prev)}>
-                    <Icon name='menu-burger' />
+                <div css={{ display: 'flex', gap: '1rem' }}>
+                    <button css={{width: 'fit-content'}} onClick={() => setCompact(prev => !prev)}>
+                        <Icon name='menu-burger'/>
+                    </button>
+                    <button
+                        css={{
+                            display: 'flex',
+                            position: isFocus ? 'fixed' : 'relative',
+                            left: isFocus ? '50%' : 0,
+                            zIndex: isFocus ? 2000 : 99,
+                            top: isFocus ? '20px': 0,
+                            background: isFocus ? '#0d2136!important' : 'transparent',
+                            width: isFocus ? '100px' : 'fit-content',
+                            height: isFocus ? '30px' : 'fit-content',
+                    }}
+                        onClick={() => setIsFocus(prev => !prev)}
+                    >
+                        <Icon name='focus'/>
+                    </button>
+                </div>
+                <button
+                    css={{position: 'absolute', left: '50%', display: 'flex', borderWidth: '0!important'}}
+                    onClick={() => handleSettingsUpdate({isRepeat: !localSettings.changed.isRepeat})}
+                >
+                    <Icon name={localSettings.changed.isRepeat ? 'pause' : 'play'}/>
                 </button>
                 <Card
+                    isFocus={isFocus}
                     settings={localSettings.changed}
                     lastCardId={localStudying.changed[localSettings.changed.lastView].lastCardId}
                     cards={currentCards}
                     onRemoveCard={(id) => deleteData(localSettings.changed.lastView, id)}
                     onUpdateCard={onUpdateCards}
                 />
-                <Navigation
-                    lastCardId={localStudying.changed[localSettings.changed.lastView].lastCardId}
-                    onStudyingUpdate={handleStudyingUpdate}
-                    cards={currentCards}
-                    onCardUpdate={onUpdateCards}
-                    settings={localSettings.changed}
-                />
+                <div css={{ opacity: isFocus ? 0 : 1, pointerEvents: isFocus ? 'none' : 'auto' }}>
+                    <Navigation
+                        lastCardId={localStudying.changed[localSettings.changed.lastView].lastCardId}
+                        onStudyingUpdate={handleStudyingUpdate}
+                        cards={currentCards}
+                        onCardUpdate={onUpdateCards}
+                        settings={localSettings.changed}
+                    />
+                </div>
             </div>
             <div css={settingsContainerStyle(isCompact)}>
-                <button css={{ marginLeft: 'auto!important' }} onClick={() => setCompact(prev => !prev)}>x</button>
+                <button css={{marginLeft: 'auto!important'}} onClick={() => setCompact(prev => !prev)}>x</button>
                 <Settings
                     cards={currentCards}
                     sentencesCount={localSentences.length || 0}

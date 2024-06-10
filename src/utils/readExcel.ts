@@ -44,6 +44,12 @@ export const readLocalFileWithMeta = async <T,>(filePath: string): Promise<T[]> 
             ...item,
             id: generateId(),
             dateAdded: new Date().toISOString(),
+            // @ts-ignore
+            isLearning: item?.isLearning === 'true',
+            // @ts-ignore
+            isIdiom: item?.isIdiom === 'true',
+            // @ts-ignore
+            isPhrasalVerb: item?.isPhrasalVerb === 'true',
         }));
     } catch (error) {
         console.error(`Error reading local file at ${filePath}:`, error);
