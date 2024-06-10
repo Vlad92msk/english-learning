@@ -63,6 +63,14 @@ const myStyle = css`
     height: 100%;
     fill: #d3e1fe;
   }
+  
+  input {
+    color: #d3e2fd;
+    background: transparent;
+    border: 1px solid #d3e1fe;
+    border-radius: 4px;
+    padding: 4px;
+  }
 `
 
 const myapp = document.getElementById('root')

@@ -1,11 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 /** @jsxImportSource @emotion/react */
 import { css } from '@emotion/react';
-import { getDownloadURL, ref } from "firebase/storage";
-import { storage } from "../index";
 import { Card as CardGET, Settings as SettingsGET, Studying } from "../types";
 import Icon from "./Icon";
-// import { Icon } from "./Icon";
 
 const navigationStyleMain = css(`
     display: flex;
@@ -44,6 +41,10 @@ const boxStyle = css(`
     display: flex;
     align-items: center;
     gap: 5px;
+    
+     @media (max-width: 500px) {
+        flex-direction: column;
+    }
 `)
 
 interface NavigationProps {
@@ -73,40 +74,14 @@ export const Navigation = React.memo((props: NavigationProps) => {
       })
   },[cards, lastCardId])
 
-
-    const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
-    const audioContextRef = React.useRef<AudioContext | null>(null);
-
-    useEffect(() => {
-        const fetchAudioBuffer = async () => {
-            try {
-                // @ts-ignore
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                audioContextRef.current = audioContext;
-                const response = await fetch('/audio/next.mp3'); // Локальный путь к аудиофайлу
-                const arrayBuffer = await response.arrayBuffer();
-                const buffer = await audioContext.decodeAudioData(arrayBuffer);
-                setAudioBuffer(buffer);
-            } catch (error) {
-                console.error("Error fetching audio buffer:", error);
-            }
-        };
-
-        fetchAudioBuffer();
-    }, []);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
 
     const playSound = useCallback(() => {
-        if (audioBuffer && audioContextRef.current) {
-            const source = audioContextRef.current.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(audioContextRef.current.destination);
-            source.start(0);
-            console.log("Playing sound");
-        } else {
-            console.error("AudioBuffer or AudioContext is not available");
+        if (audioRef.current) {
+            audioRef.current.currentTime = 0; // В случае, если аудио уже играет
+            audioRef.current.play().catch(error => console.error("Audio play failed:", error));
         }
-    }, [audioBuffer]);
-
+    }, []);
 
     const handleNextCard = useCallback(() => {
         if (cards.length > 0 && nextIndex && cards[nextIndex].id) {
@@ -139,10 +114,11 @@ export const Navigation = React.memo((props: NavigationProps) => {
     }, [handleNextCard, isRepeat, repeatTime]);
 
     return <div css={navigationStyleMain}>
+        <audio ref={audioRef} src="/audio/next.mp3" preload="auto"></audio>
         <span>{currentIndex + 1}/{cards?.length}</span>
         <div css={navigationStyle}>
             <button onClick={handlePrevCard}>
-                <Icon  name="arrow-left-sharp"/>
+                <Icon name="arrow-left-sharp"/>
             </button>
             <div css={boxStyle}>
                 <span>Продолжаем учить?</span>
@@ -155,7 +131,7 @@ export const Navigation = React.memo((props: NavigationProps) => {
                 </select>
             </div>
             <button onClick={handleNextCard}>
-                <Icon  name="arrow-right-sharp"/>
+                <Icon name="arrow-right-sharp"/>
             </button>
         </div>
     </div>

@@ -72,6 +72,8 @@ const buttonStyle = (color?: string) => css(`
 `)
 
 interface SettingsProps {
+    isTableView: boolean
+    setIsTableView: React.Dispatch<React.SetStateAction<boolean>>
     onUpdateSettings: (updatedSettings: Partial<SettingsGET>) => void
     sentencesCount: number
     vocabularCount: number
@@ -83,7 +85,19 @@ interface SettingsProps {
     cards: Card[]
 }
 export const Settings = React.memo((props: SettingsProps) => {
-    const { settings, onAddNewCard, onSettingsUpdate, cardType, onUpdateSettings, isLearning, vocabularCount, sentencesCount, cards } = props;
+    const {
+        settings,
+        onAddNewCard,
+        onSettingsUpdate,
+        cardType,
+        onUpdateSettings,
+        isLearning,
+        vocabularCount,
+        sentencesCount,
+        cards,
+        setIsTableView,
+        isTableView
+    } = props;
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const handleButtonClick = () => {
@@ -211,8 +225,11 @@ export const Settings = React.memo((props: SettingsProps) => {
                     </div>
                 )}
             </div>
-
-            <div css={[uploadBoxStyle]}>
+            <div css={boxGroupStyle}>
+                <button css={{ background: isTableView ? 'transparent!important' : 'rgba(4,162,187,0.42)!important' }} onClick={() => setIsTableView(() => false)}>Карточки</button>
+                <button css={{ background: isTableView ? 'rgba(4,162,187,0.42)!important' : 'transparent!important' }} onClick={() => setIsTableView(() => true)}>Таблица</button>
+            </div>
+            <div css={uploadBoxStyle}>
                 <button onClick={() => {
                     onAddNewCard({
                         isLearning: true,
