@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 /** @jsxImportSource @emotion/react */
 import { css } from '@emotion/react';
 import { getDownloadURL, ref } from "firebase/storage";
@@ -56,51 +56,78 @@ interface NavigationProps {
 export const Navigation = React.memo((props: NavigationProps) => {
     const { onCardUpdate, cards, settings: { repeatTime, isRepeat }, lastCardId, onStudyingUpdate } = props;
 
-    const currentIndex1 = (!lastCardId?.length) ? 0 : cards?.findIndex(card => card.id === lastCardId) || 0
-    const currentIndex = currentIndex1 < 0 ? 0 : currentIndex1
+  const { currentCard, nextIndex, prevIndex, currentIndex } = useMemo(() => {
+      const currentIndex1 = (!lastCardId?.length) ? 0 : cards?.findIndex(card => card.id === lastCardId) || 0
+      const currentIndex = currentIndex1 < 0 ? 0 : currentIndex1
 
-    const nextIndex = currentIndex === cards?.length - 1 ? 0 : currentIndex + 1
-    const prevIndex = currentIndex === 0 ? cards?.length - 1 : currentIndex - 1
+      const nextIndex = currentIndex === cards?.length - 1 ? 0 : currentIndex + 1
+      const prevIndex = currentIndex === 0 ? cards?.length - 1 : currentIndex - 1
 
-    const currentCard = cards[currentIndex]
+      const currentCard = cards[currentIndex]
 
-    const [audioURL, setAudioURL] = useState<string | null>(null);
+      return ({
+          currentCard,
+          nextIndex,
+          prevIndex,
+          currentIndex
+      })
+  },[cards, lastCardId])
+
+
+    const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
+    const audioContextRef = React.useRef<AudioContext | null>(null);
 
     useEffect(() => {
-        const fetchAudioURL = async () => {
+        const fetchAudioBuffer = async () => {
             try {
-                const url = await getDownloadURL(ref(storage, 'gs://english-learning-app-vlad.appspot.com/audio/next.mp3')); // Укажите путь к вашему звуковому файлу в Firebase Storage
-                setAudioURL(url);
+                // @ts-ignore
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                audioContextRef.current = audioContext;
+                const response = await fetch('/audio/next.mp3'); // Локальный путь к аудиофайлу
+                const arrayBuffer = await response.arrayBuffer();
+                const buffer = await audioContext.decodeAudioData(arrayBuffer);
+                setAudioBuffer(buffer);
             } catch (error) {
-                console.error("Error fetching audio URL:", error);
+                console.error("Error fetching audio buffer:", error);
             }
         };
 
-        fetchAudioURL();
+        fetchAudioBuffer();
     }, []);
+
+    const playSound = useCallback(() => {
+        if (audioBuffer && audioContextRef.current) {
+            const source = audioContextRef.current.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(audioContextRef.current.destination);
+            source.start(0);
+            console.log("Playing sound");
+        } else {
+            console.error("AudioBuffer or AudioContext is not available");
+        }
+    }, [audioBuffer]);
+
 
     const handleNextCard = useCallback(() => {
         if (cards.length > 0 && nextIndex && cards[nextIndex].id) {
-            onStudyingUpdate({lastCardId: cards[nextIndex].id})
+            onStudyingUpdate({ lastCardId: cards[nextIndex].id });
+            playSound();
         }
-    }, [cards, nextIndex, onStudyingUpdate])
+    }, [cards, nextIndex, onStudyingUpdate, playSound]);
 
     const handlePrevCard = useCallback(() => {
         if (cards.length > 0 && prevIndex >= 0 && cards[prevIndex].id) {
-            onStudyingUpdate({ lastCardId: cards[prevIndex].id })
+            onStudyingUpdate({ lastCardId: cards[prevIndex].id });
+            playSound();
         }
-    }, [cards, onStudyingUpdate, prevIndex])
+    }, [cards, onStudyingUpdate, prevIndex, playSound]);
 
     useEffect(() => {
-        if (!audioURL) return;
-
-        const audio = new Audio(audioURL);
         let timeoutId: NodeJS.Timeout | null = null;
 
         if (isRepeat && repeatTime > 100) {
             timeoutId = setTimeout(() => {
                 handleNextCard();
-                audio.play();
             }, repeatTime);
         }
 
@@ -109,7 +136,7 @@ export const Navigation = React.memo((props: NavigationProps) => {
                 clearTimeout(timeoutId);
             }
         };
-    }, [audioURL, handleNextCard, isRepeat, repeatTime]);
+    }, [handleNextCard, isRepeat, repeatTime]);
 
     return <div css={navigationStyleMain}>
         <span>{currentIndex + 1}/{cards?.length}</span>

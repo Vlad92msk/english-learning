@@ -50,7 +50,7 @@ const settingsInitial: SettingsType = {
     type: SettingsTypeEnum.SIDE_2,
     firstSide: SettingsfFrstSide.NATIVE,
     isRepeat: false,
-    repeatTime: 30000,
+    repeatTime: 400,
 }
 
 const localStudyingInitial: Studying = {
