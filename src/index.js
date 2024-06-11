@@ -25,7 +25,9 @@ export const storage = getStorage(app);
 
 const myStyle = css`
   color: #d3e2fd;
-  
+  letter-spacing: 0.06em;
+  font-weight: 200;
+    
   select {
     border: 1px solid #d3e1fe;
     outline: 2px solid transparent;
@@ -70,6 +72,14 @@ const myStyle = css`
     border: 1px solid #d3e1fe;
     border-radius: 4px;
     padding: 4px;
+  }
+  
+  textarea {
+    vertical-align: middle;
+    transition-property: background-color, border, height;
+    transition-duration: .15s;
+    border-color: #d3e1fe;
+    resize: none;
   }
 `
 

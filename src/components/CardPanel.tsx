@@ -39,15 +39,15 @@ const cardPanelStyle = css`
      top: 0;
      bottom: 0;
      text-align: center;
-     
   }
+}
 `;
 
 const cardDataButtonsStyle = css(`
     z-index: 1;
-position: absolute;
-right: 0;
-  transform: translateX(10px);
+    position: absolute;
+    right: 0;
+    transform: translateX(10px);
     place-self: flex-end;
     right: 0!important;
     top: 0!important;
@@ -66,7 +66,14 @@ right: 0;
     
 `)
 const copyButtonStyle = css`
-    bottom: 0
+    bottom: 0;
+`
+
+const textCardStyle = css`
+    :first-letter {
+        text-transform: uppercase!important;
+        color: red!important;
+    }
 `
 const voiceButtonStyle = css`
     bottom: 50%;
@@ -151,7 +158,7 @@ export const CardPanel = (props: CardPanelProps) => {
             <button css={voiceButtonStyle} onClick={(e) => handleVoice(e)}>
                 <Icon  name="sound"/>
             </button>
-            <span>{currentValue}</span>
+            <span css={textCardStyle}>{currentValue}</span>
         </div>
     );
 

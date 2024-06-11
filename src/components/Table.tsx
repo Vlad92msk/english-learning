@@ -8,19 +8,25 @@ const tableStyle = css`
   max-height: 80vh;
   width: 100%;
   position: relative;
-  overflow-y: auto;
+  overflow: auto;
   margin-bottom: 20px;
   margin-top: 20px;
   
+  textarea {
+      width: 100%;
+      max-width: 100%;
+      height: 100%;
+      max-height: 100%;
+}
   input {
     margin-top: 10px;
     margin-bottom: 10px;
   }
 
   table {
-    width: 100%;
+    min-width: 900px;
     border-collapse: collapse;
-    
+    width: 100%;
   }
   
   th {
@@ -32,6 +38,10 @@ const tableStyle = css`
     padding: 8px; /* Добавлено для внутреннего отступа ячеек */
     font-weight: normal;
     height: 40px;
+    
+    ::first-letter {
+        text-transform: uppercase;
+    }
   }
   
   ::-webkit-scrollbar {
@@ -57,17 +67,17 @@ const columnEnStyle = css`
 `;
 
 const columnStatusStyle = css`
-  width: 70px;
+  width: 80px;
   text-align: center;
 `;
 
 const columnVerbStyle = css`
-  width: 70px;
+  width: 80px;
   text-align: center;
 `;
 
 const columnIdiomStyle = css`
-  width: 70px;
+  width: 80px;
   text-align: center;
 `;
 
@@ -141,8 +151,7 @@ export const Table = (props: TableProps) => {
                             onChange={(e) => setEditValue(e.target.checked)}
                         />
                     ) : (
-                        <input
-                            type="text"
+                        <textarea
                             value={editValue as string}
                             onChange={(e) => setEditValue(e.target.value)}
                         />

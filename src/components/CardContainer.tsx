@@ -115,7 +115,7 @@ export const CardContainer = (props: CardContainerProps) => {
         learning: (
             <CardPanel
                 initialValue={enValue}
-                lang={'ru-RU'}
+                lang={'en-US'}
                 id={id}
                 onUpdateCard={onUpdateCard}
             />

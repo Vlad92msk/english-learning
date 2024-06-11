@@ -28,7 +28,11 @@ const appStyle = css(`
   padding: 50px;
   flex-direction: column;
   column-gap: 30px;    
-  position: relative;    
+  position: relative;
+      
+  @media (max-width: 500px) {
+      padding: 10px;
+  }
 `)
 const settingsContainerStyle = (isCompact: boolean) => css`
     opacity: ${isCompact ? 0 : 1};
